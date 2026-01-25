@@ -433,28 +433,46 @@
         let tokensData = {};
         const API_BASE = window.location.origin;
 
+        // Debug logging
+        function debugLog(msg, data = null) {
+            console.log(`[Admin Debug] ${msg}`, data || '');
+        }
+
         // Login
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             adminKey = document.getElementById('adminKeyInput').value;
+            const errorEl = document.getElementById('loginError');
+            
+            debugLog('Attempting login to:', `${API_BASE}/api/admin/stats`);
             
             try {
                 const res = await fetch(`${API_BASE}/api/admin/stats`, {
-                    headers: { 'x-admin-key': adminKey }
+                    method: 'GET',
+                    headers: { 
+                        'x-admin-key': adminKey,
+                        'Accept': 'application/json'
+                    }
                 });
                 
-                if (res.ok) {
+                debugLog('Response status:', res.status);
+                
+                const data = await res.json();
+                debugLog('Response data:', data);
+                
+                if (res.ok && data.success) {
                     document.getElementById('loginModal').classList.add('hidden');
                     document.getElementById('dashboard').classList.remove('hidden');
                     localStorage.setItem('adminKey', adminKey);
                     loadDashboard();
                 } else {
-                    document.getElementById('loginError').textContent = 'Invalid admin key';
-                    document.getElementById('loginError').classList.remove('hidden');
+                    errorEl.textContent = data.error || `Auth failed (HTTP ${res.status})`;
+                    errorEl.classList.remove('hidden');
                 }
             } catch (err) {
-                document.getElementById('loginError').textContent = 'Connection error';
-                document.getElementById('loginError').classList.remove('hidden');
+                debugLog('Fetch error:', err);
+                errorEl.innerHTML = `Connection error: ${err.message}<br><small>URL: ${API_BASE}/api/admin/stats</small>`;
+                errorEl.classList.remove('hidden');
             }
         });
 
