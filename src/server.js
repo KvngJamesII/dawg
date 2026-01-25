@@ -10,10 +10,11 @@ import adminRoutes, { isApiKeyRequired } from './routes/adminRoutes.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { apiKeyAuth, optionalApiKeyAuth } from './middleware/auth.js';
 
-dotenv.config();
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+// Load .env from project root (parent of src/)
+dotenv.config({ path: join(__dirname, '..', '.env') });
 
 const app = express();
 const PORT = process.env.PORT || 3000;
