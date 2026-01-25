@@ -2,7 +2,7 @@ import axios from 'axios';
 
 /**
  * YouTube Audio Download Service
- * Extracts audio from YouTube videos
+ * Extracts audio from YouTube videos using reliable APIs
  */
 
 // Extract video ID from various YouTube URL formats
@@ -17,102 +17,6 @@ function extractVideoId(url) {
     if (match) return match[1];
   }
   return null;
-}
-
-// Get video info and audio URL using a reliable API
-async function getVideoInfo(videoId) {
-  // Using a public API endpoint for YouTube info
-  const apiUrl = `https://yt-api.p.rapidapi.com/dl?id=${videoId}`;
-  
-  try {
-    // Try cobalt.tools API first (free, no key needed)
-    const cobaltResponse = await axios.post('https://api.cobalt.tools/api/json', {
-      url: `https://www.youtube.com/watch?v=${videoId}`,
-      vCodec: 'h264',
-      vQuality: '720',
-      aFormat: 'mp3',
-      isAudioOnly: true,
-      disableMetadata: false
-    }, {
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      },
-      timeout: 15000
-    });
-
-    if (cobaltResponse.data && cobaltResponse.data.url) {
-      return {
-        source: 'cobalt',
-        audioUrl: cobaltResponse.data.url,
-        videoId
-      };
-    }
-  } catch (err) {
-    console.log('Cobalt API failed, trying fallback...');
-  }
-
-  // Fallback: Try y2mate-type API
-  try {
-    const response = await axios.get(`https://youtube-mp36.p.rapidapi.com/dl?id=${videoId}`, {
-      headers: {
-        'X-RapidAPI-Key': process.env.RAPIDAPI_KEY || '',
-        'X-RapidAPI-Host': 'youtube-mp36.p.rapidapi.com'
-      },
-      timeout: 15000
-    });
-
-    if (response.data && response.data.link) {
-      return {
-        source: 'rapidapi',
-        title: response.data.title,
-        audioUrl: response.data.link,
-        duration: response.data.duration,
-        videoId
-      };
-    }
-  } catch (err) {
-    console.log('RapidAPI failed, trying another fallback...');
-  }
-
-  // Fallback 2: Use yt-download API
-  try {
-    const response = await axios.get(`https://yt-download.org/api/button/mp3/${videoId}`, {
-      timeout: 15000
-    });
-    
-    // Parse the response for download link
-    const linkMatch = response.data.match(/href="(https:\/\/[^"]+\.mp3[^"]*)"/);
-    if (linkMatch) {
-      return {
-        source: 'yt-download',
-        audioUrl: linkMatch[1],
-        videoId
-      };
-    }
-  } catch (err) {
-    console.log('yt-download failed...');
-  }
-
-  // Fallback 3: Use a scraping approach with ytdl proxy
-  try {
-    const response = await axios.get(`https://api.vevioz.com/api/button/mp3/${videoId}`, {
-      timeout: 15000
-    });
-    
-    const linkMatch = response.data.match(/href="(https:\/\/[^"]+)"/);
-    if (linkMatch) {
-      return {
-        source: 'vevioz',
-        audioUrl: linkMatch[1],
-        videoId
-      };
-    }
-  } catch (err) {
-    console.log('Vevioz failed...');
-  }
-
-  throw new Error('Unable to extract audio from this video');
 }
 
 // Get video metadata from YouTube oEmbed (free, no API key)
@@ -139,6 +43,190 @@ async function getVideoMetadata(videoId) {
   }
 }
 
+// Try multiple services to get audio URL
+async function getAudioUrl(videoId) {
+  const services = [
+    // Service 1: cn.downloader.to (very reliable)
+    async () => {
+      // Step 1: Analyze video
+      const analyzeRes = await axios.post('https://ab.cococococ.com/ajax/download.php', 
+        new URLSearchParams({
+          url: `https://www.youtube.com/watch?v=${videoId}`,
+          format: 'mp3',
+          quality: '128'
+        }).toString(),
+        {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            'Origin': 'https://ytmp3.cc',
+            'Referer': 'https://ytmp3.cc/'
+          },
+          timeout: 20000
+        }
+      );
+      
+      if (analyzeRes.data?.url) {
+        return { url: analyzeRes.data.url, source: 'cococococ' };
+      }
+      throw new Error('No audio URL');
+    },
+
+    // Service 2: Use onlinevideoconverter style API
+    async () => {
+      const response = await axios.get(`https://p.oceansaver.in/ajax/download.php?format=mp3&url=https://www.youtube.com/watch?v=${videoId}`, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        },
+        timeout: 20000
+      });
+      
+      if (response.data?.url) {
+        return { url: response.data.url, source: 'oceansaver' };
+      }
+      throw new Error('No audio URL');
+    },
+
+    // Service 3: Use 9convert style
+    async () => {
+      const formData = new URLSearchParams();
+      formData.append('url', `https://www.youtube.com/watch?v=${videoId}`);
+      formData.append('format', 'mp3');
+      
+      const response = await axios.post('https://9convert.com/api/ajaxSearch/index', formData.toString(), {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        },
+        timeout: 15000
+      });
+      
+      if (response.data?.links?.mp3) {
+        const mp3Data = response.data.links.mp3;
+        const key = Object.keys(mp3Data)[0];
+        if (mp3Data[key]?.k) {
+          // Get download link
+          const convertRes = await axios.post('https://9convert.com/api/ajaxConvert/convert',
+            new URLSearchParams({
+              vid: videoId,
+              k: mp3Data[key].k
+            }).toString(),
+            {
+              headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+              },
+              timeout: 30000
+            }
+          );
+          
+          if (convertRes.data?.dlink) {
+            return { url: convertRes.data.dlink, source: '9convert' };
+          }
+        }
+      }
+      throw new Error('No audio URL');
+    },
+
+    // Service 4: tomp3.cc API
+    async () => {
+      const response = await axios.post('https://tomp3.cc/api/ajax/search',
+        new URLSearchParams({
+          query: `https://www.youtube.com/watch?v=${videoId}`,
+          vt: 'mp3'
+        }).toString(),
+        {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+          },
+          timeout: 15000
+        }
+      );
+      
+      if (response.data?.links?.mp3?.mp3128?.k) {
+        const convertRes = await axios.post('https://tomp3.cc/api/ajax/convert',
+          new URLSearchParams({
+            vid: videoId,
+            k: response.data.links.mp3.mp3128.k
+          }).toString(),
+          {
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            },
+            timeout: 30000
+          }
+        );
+        
+        if (convertRes.data?.dlink) {
+          return { url: convertRes.data.dlink, source: 'tomp3.cc' };
+        }
+      }
+      throw new Error('No audio URL');
+    },
+
+    // Service 5: yt5s.io API
+    async () => {
+      const response = await axios.post('https://yt5s.io/api/ajaxSearch',
+        new URLSearchParams({
+          q: `https://www.youtube.com/watch?v=${videoId}`,
+          vt: 'mp3'
+        }).toString(),
+        {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+          },
+          timeout: 15000
+        }
+      );
+      
+      if (response.data?.links?.mp3) {
+        const mp3Links = response.data.links.mp3;
+        const firstKey = Object.keys(mp3Links)[0];
+        
+        if (mp3Links[firstKey]?.k) {
+          const convertRes = await axios.post('https://cv.yt5s.io/api/ajaxConvert',
+            new URLSearchParams({
+              vid: videoId,
+              k: mp3Links[firstKey].k
+            }).toString(),
+            {
+              headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+              },
+              timeout: 30000
+            }
+          );
+          
+          if (convertRes.data?.dlink) {
+            return { url: convertRes.data.dlink, source: 'yt5s' };
+          }
+        }
+      }
+      throw new Error('No audio URL');
+    }
+  ];
+
+  // Try each service until one works
+  for (const service of services) {
+    try {
+      const result = await service();
+      if (result?.url) {
+        console.log(`YouTube audio extracted via ${result.source}`);
+        return result;
+      }
+    } catch (err) {
+      console.log(`Service failed: ${err.message}`);
+      continue;
+    }
+  }
+
+  throw new Error('Unable to extract audio from this video. All services failed.');
+}
+
 export async function downloadYouTubeAudio(url) {
   const videoId = extractVideoId(url);
   
@@ -146,22 +234,21 @@ export async function downloadYouTubeAudio(url) {
     throw new Error('Invalid YouTube URL');
   }
 
-  // Get metadata and audio URL in parallel
-  const [metadata, audioInfo] = await Promise.all([
-    getVideoMetadata(videoId),
-    getVideoInfo(videoId)
-  ]);
+  // Get metadata first
+  const metadata = await getVideoMetadata(videoId);
+  
+  // Then try to get audio URL
+  const audioInfo = await getAudioUrl(videoId);
 
   return {
     videoId,
-    title: audioInfo.title || metadata.title,
+    title: metadata.title,
     author: metadata.author,
     authorUrl: metadata.authorUrl,
     thumbnail: metadata.thumbnail,
     thumbnailHq: metadata.thumbnailHq,
-    duration: audioInfo.duration || null,
     audio: {
-      url: audioInfo.audioUrl,
+      url: audioInfo.url,
       format: 'mp3',
       source: audioInfo.source
     },
