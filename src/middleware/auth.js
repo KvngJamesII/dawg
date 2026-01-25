@@ -9,13 +9,14 @@ export function apiKeyAuth(req, res, next) {
   const apiKey = 
     req.headers['x-api-key'] || 
     req.headers['authorization']?.replace('Bearer ', '') ||
-    req.query.api_key;
+    req.query.api_key ||
+    req.query.key;  // Also support ?key= for browser URLs
 
   if (!apiKey) {
     return res.status(401).json({
       success: false,
       error: 'API key required',
-      message: 'Please provide an API key via X-API-Key header, Authorization: Bearer <key>, or ?api_key= query param'
+      message: 'Please provide an API key via X-API-Key header, Authorization: Bearer <key>, or ?key= query param'
     });
   }
 
@@ -58,7 +59,8 @@ export function optionalApiKeyAuth(req, res, next) {
   const apiKey = 
     req.headers['x-api-key'] || 
     req.headers['authorization']?.replace('Bearer ', '') ||
-    req.query.api_key;
+    req.query.api_key ||
+    req.query.key;  // Also support ?key= for browser URLs
 
   if (apiKey) {
     const validation = tokenService.validateToken(apiKey);

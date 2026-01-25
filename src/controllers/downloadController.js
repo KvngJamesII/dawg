@@ -2,10 +2,22 @@ import { TikTokService } from '../services/tiktokService.js';
 import { InstagramService } from '../services/instagramService.js';
 import { TwitterService } from '../services/twitterService.js';
 import { detectPlatform } from '../utils/platformDetector.js';
+import { tokenService } from '../services/tokenService.js';
 
 const tiktokService = new TikTokService();
 const instagramService = new InstagramService();
 const twitterService = new TwitterService();
+
+// Helper to validate and track API key usage
+function validateAndTrackKey(key) {
+  if (!key) return { valid: true, noKey: true }; // Allow requests without key (public rate limited)
+  
+  const validation = tokenService.validateToken(key);
+  if (validation.valid) {
+    tokenService.recordUsage(key);
+  }
+  return validation;
+}
 
 export const downloadController = {
   // Universal download - auto-detects platform
@@ -175,8 +187,16 @@ export const downloadController = {
         });
       }
 
-      // Set API key if provided in query
-      if (key) req.headers['x-api-key'] = key;
+      // Validate and track API key usage
+      if (key) {
+        const validation = validateAndTrackKey(key);
+        if (!validation.valid) {
+          return res.json({
+            success: false,
+            error: validation.error
+          });
+        }
+      }
 
       const platform = detectPlatform(url);
       if (!platform) {
@@ -233,7 +253,16 @@ export const downloadController = {
         });
       }
 
-      if (key) req.headers['x-api-key'] = key;
+      // Validate and track API key usage
+      if (key) {
+        const validation = validateAndTrackKey(key);
+        if (!validation.valid) {
+          return res.json({
+            success: false,
+            error: validation.error
+          });
+        }
+      }
 
       if (!url.includes('tiktok.com') && !url.includes('vm.tiktok') && !url.includes('vt.tiktok')) {
         return res.json({
@@ -277,7 +306,16 @@ export const downloadController = {
         });
       }
 
-      if (key) req.headers['x-api-key'] = key;
+      // Validate and track API key usage
+      if (key) {
+        const validation = validateAndTrackKey(key);
+        if (!validation.valid) {
+          return res.json({
+            success: false,
+            error: validation.error
+          });
+        }
+      }
 
       if (!url.includes('instagram.com')) {
         return res.json({
@@ -321,7 +359,16 @@ export const downloadController = {
         });
       }
 
-      if (key) req.headers['x-api-key'] = key;
+      // Validate and track API key usage
+      if (key) {
+        const validation = validateAndTrackKey(key);
+        if (!validation.valid) {
+          return res.json({
+            success: false,
+            error: validation.error
+          });
+        }
+      }
 
       if (!url.includes('twitter.com') && !url.includes('x.com')) {
         return res.json({
