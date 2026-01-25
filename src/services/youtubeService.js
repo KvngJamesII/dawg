@@ -2,7 +2,7 @@ import axios from 'axios';
 
 /**
  * YouTube Audio Download Service
- * Extracts audio from YouTube videos using reliable APIs
+ * Extracts audio from YouTube videos using cobalt API
  */
 
 // Extract video ID from various YouTube URL formats
@@ -45,172 +45,143 @@ async function getVideoMetadata(videoId) {
 
 // Try multiple services to get audio URL
 async function getAudioUrl(videoId) {
+  const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
+  
   const services = [
-    // Service 1: cn.downloader.to (very reliable)
+    // Service 1: Cobalt API (self-hosted instances)
     async () => {
-      // Step 1: Analyze video
-      const analyzeRes = await axios.post('https://ab.cococococ.com/ajax/download.php', 
+      const cobaltInstances = [
+        'https://api.cobalt.tools',
+        'https://cobalt-api.hyper.lol',
+        'https://cobalt.api.timelessnesses.me'
+      ];
+      
+      for (const instance of cobaltInstances) {
+        try {
+          const response = await axios.post(`${instance}/api/json`, {
+            url: youtubeUrl,
+            aFormat: 'mp3',
+            isAudioOnly: true,
+            audioBitrate: '128'
+          }, {
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+            },
+            timeout: 20000
+          });
+
+          if (response.data?.url) {
+            return { url: response.data.url, source: 'cobalt' };
+          }
+        } catch (e) {
+          continue;
+        }
+      }
+      throw new Error('Cobalt failed');
+    },
+
+    // Service 2: y2meta API
+    async () => {
+      const analyzeRes = await axios.post('https://www.y2meta.com/mates/analyzeV2/ajax',
         new URLSearchParams({
-          url: `https://www.youtube.com/watch?v=${videoId}`,
+          k_query: youtubeUrl,
+          k_page: 'home',
+          hl: 'en',
+          q_auto: '0'
+        }).toString(),
+        {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+          },
+          timeout: 15000
+        }
+      );
+
+      if (analyzeRes.data?.links?.mp3) {
+        const mp3Links = analyzeRes.data.links.mp3;
+        const quality = Object.keys(mp3Links).find(k => k.includes('128')) || Object.keys(mp3Links)[0];
+        
+        if (mp3Links[quality]?.k) {
+          const convertRes = await axios.post('https://www.y2meta.com/mates/convertV2/index',
+            new URLSearchParams({
+              vid: videoId,
+              k: mp3Links[quality].k
+            }).toString(),
+            {
+              headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+              },
+              timeout: 30000
+            }
+          );
+
+          if (convertRes.data?.dlink) {
+            return { url: convertRes.data.dlink, source: 'y2meta' };
+          }
+        }
+      }
+      throw new Error('y2meta failed');
+    },
+
+    // Service 3: y2mate.nu API
+    async () => {
+      const response = await axios.post('https://www.y2mate.nu/api/convert',
+        {
+          url: youtubeUrl,
           format: 'mp3',
           quality: '128'
-        }).toString(),
+        },
         {
           headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            'Origin': 'https://ytmp3.cc',
-            'Referer': 'https://ytmp3.cc/'
+            'Content-Type': 'application/json',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
           },
-          timeout: 20000
+          timeout: 30000
         }
       );
-      
-      if (analyzeRes.data?.url) {
-        return { url: analyzeRes.data.url, source: 'cococococ' };
+
+      if (response.data?.downloadUrl) {
+        return { url: response.data.downloadUrl, source: 'y2mate.nu' };
       }
-      throw new Error('No audio URL');
+      throw new Error('y2mate.nu failed');
     },
 
-    // Service 2: Use onlinevideoconverter style API
+    // Service 4: savemp3 API
     async () => {
-      const response = await axios.get(`https://p.oceansaver.in/ajax/download.php?format=mp3&url=https://www.youtube.com/watch?v=${videoId}`, {
+      const response = await axios.get(`https://api.savemp3.cc/api/convert?url=${encodeURIComponent(youtubeUrl)}`, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
         },
-        timeout: 20000
+        timeout: 25000
       });
-      
+
       if (response.data?.url) {
-        return { url: response.data.url, source: 'oceansaver' };
+        return { url: response.data.url, source: 'savemp3' };
       }
-      throw new Error('No audio URL');
+      throw new Error('savemp3 failed');
     },
 
-    // Service 3: Use 9convert style
+    // Service 5: mp3download.to style
     async () => {
-      const formData = new URLSearchParams();
-      formData.append('url', `https://www.youtube.com/watch?v=${videoId}`);
-      formData.append('format', 'mp3');
-      
-      const response = await axios.post('https://9convert.com/api/ajaxSearch/index', formData.toString(), {
+      const response = await axios.get(`https://api.mp3download.to/v1/youtube/video?url=${encodeURIComponent(youtubeUrl)}`, {
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
         },
-        timeout: 15000
+        timeout: 25000
       });
-      
-      if (response.data?.links?.mp3) {
-        const mp3Data = response.data.links.mp3;
-        const key = Object.keys(mp3Data)[0];
-        if (mp3Data[key]?.k) {
-          // Get download link
-          const convertRes = await axios.post('https://9convert.com/api/ajaxConvert/convert',
-            new URLSearchParams({
-              vid: videoId,
-              k: mp3Data[key].k
-            }).toString(),
-            {
-              headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-              },
-              timeout: 30000
-            }
-          );
-          
-          if (convertRes.data?.dlink) {
-            return { url: convertRes.data.dlink, source: '9convert' };
-          }
-        }
-      }
-      throw new Error('No audio URL');
-    },
 
-    // Service 4: tomp3.cc API
-    async () => {
-      const response = await axios.post('https://tomp3.cc/api/ajax/search',
-        new URLSearchParams({
-          query: `https://www.youtube.com/watch?v=${videoId}`,
-          vt: 'mp3'
-        }).toString(),
-        {
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-          },
-          timeout: 15000
-        }
-      );
-      
-      if (response.data?.links?.mp3?.mp3128?.k) {
-        const convertRes = await axios.post('https://tomp3.cc/api/ajax/convert',
-          new URLSearchParams({
-            vid: videoId,
-            k: response.data.links.mp3.mp3128.k
-          }).toString(),
-          {
-            headers: {
-              'Content-Type': 'application/x-www-form-urlencoded',
-              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-            },
-            timeout: 30000
-          }
-        );
-        
-        if (convertRes.data?.dlink) {
-          return { url: convertRes.data.dlink, source: 'tomp3.cc' };
-        }
+      if (response.data?.download?.mp3) {
+        return { url: response.data.download.mp3, source: 'mp3download.to' };
       }
-      throw new Error('No audio URL');
-    },
-
-    // Service 5: yt5s.io API
-    async () => {
-      const response = await axios.post('https://yt5s.io/api/ajaxSearch',
-        new URLSearchParams({
-          q: `https://www.youtube.com/watch?v=${videoId}`,
-          vt: 'mp3'
-        }).toString(),
-        {
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-          },
-          timeout: 15000
-        }
-      );
-      
-      if (response.data?.links?.mp3) {
-        const mp3Links = response.data.links.mp3;
-        const firstKey = Object.keys(mp3Links)[0];
-        
-        if (mp3Links[firstKey]?.k) {
-          const convertRes = await axios.post('https://cv.yt5s.io/api/ajaxConvert',
-            new URLSearchParams({
-              vid: videoId,
-              k: mp3Links[firstKey].k
-            }).toString(),
-            {
-              headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-              },
-              timeout: 30000
-            }
-          );
-          
-          if (convertRes.data?.dlink) {
-            return { url: convertRes.data.dlink, source: 'yt5s' };
-          }
-        }
-      }
-      throw new Error('No audio URL');
+      throw new Error('mp3download.to failed');
     }
   ];
 
   // Try each service until one works
+  const errors = [];
   for (const service of services) {
     try {
       const result = await service();
@@ -219,12 +190,12 @@ async function getAudioUrl(videoId) {
         return result;
       }
     } catch (err) {
-      console.log(`Service failed: ${err.message}`);
+      errors.push(err.message);
       continue;
     }
   }
 
-  throw new Error('Unable to extract audio from this video. All services failed.');
+  throw new Error(`Unable to extract audio. Errors: ${errors.join(', ')}`);
 }
 
 export async function downloadYouTubeAudio(url) {
