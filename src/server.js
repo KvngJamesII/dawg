@@ -20,16 +20,7 @@ const PORT = process.env.PORT || 3000;
 
 // Security middleware - configure helmet to allow inline scripts for admin dashboard
 app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.tailwindcss.com"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com"],
-      fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
-      imgSrc: ["'self'", "data:"],
-      connectSrc: ["'self'"]
-    }
-  }
+  contentSecurityPolicy: false  // Disable CSP for now to allow dashboard
 }));
 app.use(cors());
 app.use(express.json());
