@@ -148,5 +148,199 @@ export const downloadController = {
         }
       ]
     });
+  },
+
+  // ============================================
+  // GET endpoints for browser URL access
+  // ============================================
+
+  // Universal GET download
+  async downloadGet(req, res, next) {
+    try {
+      const { url, key } = req.query;
+      
+      if (!url) {
+        return res.json({
+          success: false,
+          error: 'Missing url parameter',
+          usage: {
+            endpoint: '/api/download',
+            method: 'GET',
+            params: {
+              url: 'Video URL (required)',
+              key: 'API key (optional)'
+            },
+            example: '/api/download?url=https://www.tiktok.com/@user/video/123&key=your_api_key'
+          }
+        });
+      }
+
+      // Set API key if provided in query
+      if (key) req.headers['x-api-key'] = key;
+
+      const platform = detectPlatform(url);
+      if (!platform) {
+        return res.json({
+          success: false,
+          error: 'Unsupported platform. Supported: TikTok, Instagram, Twitter/X'
+        });
+      }
+
+      let result;
+      switch (platform) {
+        case 'tiktok':
+          result = await tiktokService.download(url);
+          break;
+        case 'instagram':
+          result = await instagramService.download(url);
+          break;
+        case 'twitter':
+          result = await twitterService.download(url);
+          break;
+      }
+
+      res.json({
+        success: true,
+        platform,
+        data: result
+      });
+    } catch (error) {
+      res.json({
+        success: false,
+        error: error.message
+      });
+    }
+  },
+
+  // TikTok GET
+  async downloadTikTokGet(req, res, next) {
+    try {
+      const { url, key } = req.query;
+      
+      if (!url) {
+        return res.json({
+          success: false,
+          error: 'Missing url parameter',
+          usage: {
+            endpoint: '/api/tiktok',
+            method: 'GET',
+            params: {
+              url: 'TikTok video URL (required)',
+              key: 'API key (optional)'
+            },
+            example: '/api/tiktok?url=https://www.tiktok.com/@user/video/123&key=your_api_key'
+          }
+        });
+      }
+
+      if (key) req.headers['x-api-key'] = key;
+
+      if (!url.includes('tiktok.com') && !url.includes('vm.tiktok') && !url.includes('vt.tiktok')) {
+        return res.json({
+          success: false,
+          error: 'Invalid TikTok URL'
+        });
+      }
+
+      const result = await tiktokService.download(url);
+      res.json({
+        success: true,
+        platform: 'tiktok',
+        data: result
+      });
+    } catch (error) {
+      res.json({
+        success: false,
+        error: error.message
+      });
+    }
+  },
+
+  // Instagram GET
+  async downloadInstagramGet(req, res, next) {
+    try {
+      const { url, key } = req.query;
+      
+      if (!url) {
+        return res.json({
+          success: false,
+          error: 'Missing url parameter',
+          usage: {
+            endpoint: '/api/instagram',
+            method: 'GET',
+            params: {
+              url: 'Instagram reel/post URL (required)',
+              key: 'API key (optional)'
+            },
+            example: '/api/instagram?url=https://www.instagram.com/reel/ABC123&key=your_api_key'
+          }
+        });
+      }
+
+      if (key) req.headers['x-api-key'] = key;
+
+      if (!url.includes('instagram.com')) {
+        return res.json({
+          success: false,
+          error: 'Invalid Instagram URL'
+        });
+      }
+
+      const result = await instagramService.download(url);
+      res.json({
+        success: true,
+        platform: 'instagram',
+        data: result
+      });
+    } catch (error) {
+      res.json({
+        success: false,
+        error: error.message
+      });
+    }
+  },
+
+  // Twitter GET
+  async downloadTwitterGet(req, res, next) {
+    try {
+      const { url, key } = req.query;
+      
+      if (!url) {
+        return res.json({
+          success: false,
+          error: 'Missing url parameter',
+          usage: {
+            endpoint: '/api/twitter',
+            method: 'GET',
+            params: {
+              url: 'Twitter/X video URL (required)',
+              key: 'API key (optional)'
+            },
+            example: '/api/twitter?url=https://twitter.com/user/status/123&key=your_api_key'
+          }
+        });
+      }
+
+      if (key) req.headers['x-api-key'] = key;
+
+      if (!url.includes('twitter.com') && !url.includes('x.com')) {
+        return res.json({
+          success: false,
+          error: 'Invalid Twitter/X URL'
+        });
+      }
+
+      const result = await twitterService.download(url);
+      res.json({
+        success: true,
+        platform: 'twitter',
+        data: result
+      });
+    } catch (error) {
+      res.json({
+        success: false,
+        error: error.message
+      });
+    }
   }
 };
