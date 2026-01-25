@@ -13,13 +13,21 @@ const router = Router();
 const ADMIN_SECRET = process.env.ADMIN_SECRET || 'supersecret_change_this_in_production';
 
 // Runtime settings (can be changed without restart)
-let runtimeSettings = {
-  requireApiKey: process.env.REQUIRE_API_KEY === 'true'
-};
+// Note: initialized lazily on first access since env vars may not be loaded at import time
+let runtimeSettings = null;
+
+function getSettings() {
+  if (runtimeSettings === null) {
+    runtimeSettings = {
+      requireApiKey: process.env.REQUIRE_API_KEY === 'true'
+    };
+  }
+  return runtimeSettings;
+}
 
 // Export function to check if API key is required
 export function isApiKeyRequired() {
-  return runtimeSettings.requireApiKey;
+  return getSettings().requireApiKey;
 }
 
 // Admin authentication middleware
@@ -310,7 +318,7 @@ router.get('/settings', (req, res) => {
   res.json({
     success: true,
     settings: {
-      requireApiKey: runtimeSettings.requireApiKey,
+      requireApiKey: getSettings().requireApiKey,
       rateLimitMax: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 20,
       rateLimitWindowMinutes: (parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 900000) / 60000
     }
@@ -326,13 +334,13 @@ router.put('/settings', (req, res) => {
     const { requireApiKey } = req.body;
     
     if (typeof requireApiKey === 'boolean') {
-      runtimeSettings.requireApiKey = requireApiKey;
+      getSettings().requireApiKey = requireApiKey;
     }
     
     res.json({
       success: true,
       message: 'Settings updated',
-      settings: runtimeSettings
+      settings: getSettings()
     });
   } catch (error) {
     res.status(500).json({
