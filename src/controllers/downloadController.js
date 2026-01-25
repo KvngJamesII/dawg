@@ -1,6 +1,7 @@
 import { TikTokService } from '../services/tiktokService.js';
 import { InstagramService } from '../services/instagramService.js';
 import { TwitterService } from '../services/twitterService.js';
+import { downloadYouTubeAudio, isYouTubeUrl } from '../services/youtubeService.js';
 import { detectPlatform } from '../utils/platformDetector.js';
 import { tokenService } from '../services/tokenService.js';
 
@@ -120,6 +121,29 @@ export const downloadController = {
     }
   },
 
+  // YouTube Audio (MP3)
+  async downloadYouTube(req, res, next) {
+    try {
+      const { url } = req.body;
+      
+      if (!isYouTubeUrl(url)) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid YouTube URL'
+        });
+      }
+
+      const result = await downloadYouTubeAudio(url);
+      res.json({
+        success: true,
+        platform: 'youtube',
+        data: result
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+
   // List supported platforms
   getPlatforms(req, res) {
     res.json({
@@ -152,6 +176,16 @@ export const downloadController = {
             'https://x.com/username/status/1234567890'
           ],
           features: ['Multiple qualities', 'GIF support']
+        },
+        {
+          name: 'YouTube (Audio/MP3)',
+          endpoint: '/api/youtube',
+          supportedUrls: [
+            'https://www.youtube.com/watch?v=XXXXXXXXXXX',
+            'https://youtu.be/XXXXXXXXXXX',
+            'https://www.youtube.com/shorts/XXXXXXXXXXX'
+          ],
+          features: ['MP3 extraction', 'High quality audio', 'Shorts support']
         }
       ]
     });
@@ -376,6 +410,59 @@ export const downloadController = {
       res.json({
         success: true,
         platform: 'twitter',
+        data: result
+      });
+    } catch (error) {
+      res.json({
+        success: false,
+        error: error.message
+      });
+    }
+  },
+
+  // YouTube GET (Audio/MP3)
+  async downloadYouTubeGet(req, res, next) {
+    try {
+      const { url, key } = req.query;
+      
+      if (!url) {
+        return res.json({
+          success: false,
+          error: 'Missing url parameter',
+          usage: {
+            endpoint: '/api/youtube',
+            method: 'GET',
+            params: {
+              url: 'YouTube video URL (required)',
+              key: 'API key (optional)'
+            },
+            example: '/api/youtube?url=https://www.youtube.com/watch?v=dQw4w9WgXcQ&key=your_api_key'
+          }
+        });
+      }
+
+      // Validate and track API key usage
+      if (key) {
+        const validation = validateKey(key);
+        if (!validation.valid) {
+          return res.json({
+            success: false,
+            error: validation.error
+          });
+        }
+      }
+
+      if (!isYouTubeUrl(url)) {
+        return res.json({
+          success: false,
+          error: 'Invalid YouTube URL'
+        });
+      }
+
+      const result = await downloadYouTubeAudio(url);
+      res.json({
+        success: true,
+        platform: 'youtube',
         data: result
       });
     } catch (error) {

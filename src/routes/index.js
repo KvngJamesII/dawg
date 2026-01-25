@@ -14,6 +14,7 @@ router.get('/download', downloadController.downloadGet);
 router.get('/tiktok', downloadController.downloadTikTokGet);
 router.get('/instagram', downloadController.downloadInstagramGet);
 router.get('/twitter', downloadController.downloadTwitterGet);
+router.get('/youtube', downloadController.downloadYouTubeGet);
 
 // ============================================
 // POST endpoints (JSON body)
@@ -22,6 +23,7 @@ router.post('/download', validateRequest(downloadSchema), downloadController.dow
 router.post('/tiktok', validateRequest(downloadSchema), downloadController.downloadTikTok);
 router.post('/instagram', validateRequest(downloadSchema), downloadController.downloadInstagram);
 router.post('/twitter', validateRequest(downloadSchema), downloadController.downloadTwitter);
+router.post('/youtube', validateRequest(downloadSchema), downloadController.downloadYouTube);
 
 // File download endpoints
 router.get('/file/download', fileController.proxyDownload);  // Proxy download (streams the actual video)
