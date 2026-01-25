@@ -1,10 +1,26 @@
 import { Router } from 'express';
 import { tokenService } from '../services/tokenService.js';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const router = Router();
 
 // Admin secret key (set in .env for production)
 const ADMIN_SECRET = process.env.ADMIN_SECRET || 'supersecret_change_this_in_production';
+
+// Runtime settings (can be changed without restart)
+let runtimeSettings = {
+  requireApiKey: process.env.REQUIRE_API_KEY === 'true'
+};
+
+// Export function to check if API key is required
+export function isApiKeyRequired() {
+  return runtimeSettings.requireApiKey;
+}
 
 // Admin authentication middleware
 function adminAuth(req, res, next) {
@@ -92,7 +108,7 @@ router.get('/tokens', (req, res) => {
  */
 router.get('/tokens/:token', (req, res) => {
   try {
-    const tokenInfo = tokenService.getTokenInfo(req.params.token);
+    const tokenInfo = tokenService.getTokenInfo(decodeURIComponent(req.params.token));
     
     if (!tokenInfo) {
       return res.status(404).json({
@@ -158,7 +174,7 @@ router.patch('/tokens/:token', (req, res) => {
   try {
     const { name, dailyLimit, totalLimit, active } = req.body;
     
-    const updated = tokenService.updateToken(req.params.token, {
+    const updated = tokenService.updateToken(decodeURIComponent(req.params.token), {
       name,
       dailyLimit: dailyLimit !== undefined ? parseInt(dailyLimit) : undefined,
       totalLimit: totalLimit !== undefined ? parseInt(totalLimit) : undefined,
@@ -198,7 +214,7 @@ router.put('/tokens/:token', (req, res) => {
   try {
     const { name, dailyLimit, totalLimit, active } = req.body;
     
-    const updated = tokenService.updateToken(req.params.token, {
+    const updated = tokenService.updateToken(decodeURIComponent(req.params.token), {
       name,
       dailyLimit: dailyLimit !== undefined ? parseInt(dailyLimit) : undefined,
       totalLimit: totalLimit !== undefined ? parseInt(totalLimit) : undefined,
@@ -238,7 +254,7 @@ router.post('/tokens/:token/reset', (req, res) => {
   try {
     const { resetTotal = false } = req.body;
     
-    const success = tokenService.resetUsage(req.params.token, resetTotal);
+    const success = tokenService.resetUsage(decodeURIComponent(req.params.token), resetTotal);
 
     if (!success) {
       return res.status(404).json({
@@ -265,7 +281,7 @@ router.post('/tokens/:token/reset', (req, res) => {
  */
 router.delete('/tokens/:token', (req, res) => {
   try {
-    const success = tokenService.deleteToken(req.params.token);
+    const success = tokenService.deleteToken(decodeURIComponent(req.params.token));
 
     if (!success) {
       return res.status(404).json({
@@ -277,6 +293,46 @@ router.delete('/tokens/:token', (req, res) => {
     res.json({
       success: true,
       message: 'Token deleted'
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/admin/settings
+ * Get current API settings
+ */
+router.get('/settings', (req, res) => {
+  res.json({
+    success: true,
+    settings: {
+      requireApiKey: runtimeSettings.requireApiKey,
+      rateLimitMax: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 20,
+      rateLimitWindowMinutes: (parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 900000) / 60000
+    }
+  });
+});
+
+/**
+ * PUT /api/admin/settings
+ * Update API settings
+ */
+router.put('/settings', (req, res) => {
+  try {
+    const { requireApiKey } = req.body;
+    
+    if (typeof requireApiKey === 'boolean') {
+      runtimeSettings.requireApiKey = requireApiKey;
+    }
+    
+    res.json({
+      success: true,
+      message: 'Settings updated',
+      settings: runtimeSettings
     });
   } catch (error) {
     res.status(500).json({

@@ -6,7 +6,7 @@ import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import routes from './routes/index.js';
-import adminRoutes from './routes/adminRoutes.js';
+import adminRoutes, { isApiKeyRequired } from './routes/adminRoutes.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { apiKeyAuth, optionalApiKeyAuth } from './middleware/auth.js';
 
@@ -39,18 +39,20 @@ const publicLimiter = rateLimit({
   skip: (req) => req.apiToken // Skip if authenticated
 });
 
-// Determine if API requires authentication
-const REQUIRE_AUTH = process.env.REQUIRE_API_KEY === 'true';
-
 // Admin routes (separate, always need admin key)
 app.use('/api/admin', adminRoutes);
 
-// Routes - with optional or required auth based on config
-if (REQUIRE_AUTH) {
-  app.use('/api', apiKeyAuth, routes);
-} else {
-  app.use('/api', publicLimiter, optionalApiKeyAuth, routes);
+// Dynamic auth middleware that checks runtime settings
+function dynamicAuth(req, res, next) {
+  if (isApiKeyRequired()) {
+    return apiKeyAuth(req, res, next);
+  } else {
+    return optionalApiKeyAuth(req, res, next);
+  }
 }
+
+// Routes - with dynamic auth based on runtime settings
+app.use('/api', publicLimiter, dynamicAuth, routes);
 
 // Health check
 app.get('/health', (req, res) => {
@@ -74,7 +76,7 @@ app.listen(PORT, () => {
 ║     🎬 Social Media Video Downloader API                      ║
 ║     Running on http://localhost:${PORT}                          ║
 ╠═══════════════════════════════════════════════════════════════╣
-║  API Endpoints (${REQUIRE_AUTH ? 'Auth Required' : 'Public + Auth'}):                               ║
+║  API Endpoints (Auth configurable via admin):                 ║
 ║  POST /api/download        - Download from any platform       ║
 ║  POST /api/tiktok          - Download TikTok videos           ║
 ║  POST /api/instagram       - Download Instagram Reels         ║
@@ -90,6 +92,7 @@ app.listen(PORT, () => {
 ║  GET    /api/admin/tokens       - List all tokens             ║
 ║  PUT    /api/admin/tokens/:t    - Update token                ║
 ║  DELETE /api/admin/tokens/:t    - Delete token                ║
+║  GET/PUT /api/admin/settings    - API settings                ║
 ╠═══════════════════════════════════════════════════════════════╣
 ║  CLI: node token-cli.js help                                  ║
 ╚═══════════════════════════════════════════════════════════════╝

@@ -495,8 +495,54 @@
         async function loadDashboard() {
             await loadStats();
             await loadTokens();
+            await loadSettings();
             document.getElementById('serverUrl').textContent = API_BASE;
         }
+
+        async function loadSettings() {
+            try {
+                const res = await fetch(`${API_BASE}/api/admin/settings`, {
+                    headers: { 'x-admin-key': adminKey }
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    document.getElementById('requireApiKey').checked = data.settings.requireApiKey;
+                    document.getElementById('rateLimitMax').value = data.settings.rateLimitMax || 20;
+                    document.getElementById('rateLimitWindow').value = data.settings.rateLimitWindowMinutes || 15;
+                }
+            } catch (err) {
+                console.error('Failed to load settings:', err);
+            }
+        }
+
+        // Handle requireApiKey toggle
+        document.getElementById('requireApiKey').addEventListener('change', async (e) => {
+            const requireApiKey = e.target.checked;
+            
+            try {
+                const res = await fetch(`${API_BASE}/api/admin/settings`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-admin-key': adminKey
+                    },
+                    body: JSON.stringify({ requireApiKey })
+                });
+                
+                const result = await res.json();
+                
+                if (result.success) {
+                    showToast(`API key requirement ${requireApiKey ? 'enabled' : 'disabled'}`, 'success');
+                } else {
+                    showToast(result.error || 'Failed to update setting', 'error');
+                    e.target.checked = !requireApiKey; // Revert toggle
+                }
+            } catch (err) {
+                showToast('Failed to update setting', 'error');
+                e.target.checked = !requireApiKey; // Revert toggle
+            }
+        });
 
         async function loadStats() {
             try {
@@ -538,12 +584,14 @@
 
         function renderTokensTable(tokens) {
             const tbody = document.getElementById('tokensTableBody');
-            tbody.innerHTML = tokens.map(t => `
-                <tr class="border-b token-row transition">
+            tbody.innerHTML = tokens.map(t => {
+                const safeToken = t.token.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                return `
+                <tr class="border-b token-row transition" data-token="${safeToken}">
                     <td class="px-6 py-4 font-medium">${t.name}</td>
                     <td class="px-6 py-4">
                         <code class="text-xs bg-gray-100 px-2 py-1 rounded">${t.token.substring(0, 20)}...</code>
-                        <button onclick="copyToClipboard('${t.token}')" class="ml-2 text-gray-400 hover:text-gray-600">
+                        <button class="copy-btn ml-2 text-gray-400 hover:text-gray-600" data-token="${safeToken}">
                             <i class="fas fa-copy"></i>
                         </button>
                     </td>
@@ -561,19 +609,33 @@
                     </td>
                     <td class="px-6 py-4">
                         <div class="flex space-x-2">
-                            <button onclick="openEditModal('${t.token}')" class="p-2 text-gray-400 hover:text-blue-600 transition">
+                            <button class="edit-btn p-2 text-gray-400 hover:text-blue-600 transition" data-token="${safeToken}">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button onclick="toggleToken('${t.token}', ${!t.active})" class="p-2 text-gray-400 hover:text-yellow-600 transition">
+                            <button class="toggle-btn p-2 text-gray-400 hover:text-yellow-600 transition" data-token="${safeToken}" data-active="${!t.active}">
                                 <i class="fas fa-${t.active ? 'pause' : 'play'}"></i>
                             </button>
-                            <button onclick="deleteToken('${t.token}')" class="p-2 text-gray-400 hover:text-red-600 transition">
+                            <button class="delete-btn p-2 text-gray-400 hover:text-red-600 transition" data-token="${safeToken}">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </div>
                     </td>
                 </tr>
-            `).join('');
+            `}).join('');
+            
+            // Add event listeners
+            tbody.querySelectorAll('.copy-btn').forEach(btn => {
+                btn.addEventListener('click', () => copyToClipboard(btn.dataset.token));
+            });
+            tbody.querySelectorAll('.edit-btn').forEach(btn => {
+                btn.addEventListener('click', () => openEditModal(btn.dataset.token));
+            });
+            tbody.querySelectorAll('.toggle-btn').forEach(btn => {
+                btn.addEventListener('click', () => toggleToken(btn.dataset.token, btn.dataset.active === 'true'));
+            });
+            tbody.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', () => deleteToken(btn.dataset.token));
+            });
         }
 
         function renderRecentTokens(tokens) {
@@ -691,7 +753,7 @@
             };
             
             try {
-                const res = await fetch(`${API_BASE}/api/admin/tokens/${tokenKey}`, {
+                const res = await fetch(`${API_BASE}/api/admin/tokens/${encodeURIComponent(tokenKey)}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
@@ -718,7 +780,7 @@
             const tokenKey = document.getElementById('editTokenKey').value;
             
             try {
-                const res = await fetch(`${API_BASE}/api/admin/tokens/${tokenKey}/reset`, {
+                const res = await fetch(`${API_BASE}/api/admin/tokens/${encodeURIComponent(tokenKey)}/reset`, {
                     method: 'POST',
                     headers: { 'x-admin-key': adminKey }
                 });
@@ -740,7 +802,7 @@
         // Toggle Token
         async function toggleToken(tokenKey, active) {
             try {
-                const res = await fetch(`${API_BASE}/api/admin/tokens/${tokenKey}`, {
+                const res = await fetch(`${API_BASE}/api/admin/tokens/${encodeURIComponent(tokenKey)}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
@@ -767,7 +829,7 @@
             if (!confirm('Are you sure you want to delete this token? This action cannot be undone.')) return;
             
             try {
-                const res = await fetch(`${API_BASE}/api/admin/tokens/${tokenKey}`, {
+                const res = await fetch(`${API_BASE}/api/admin/tokens/${encodeURIComponent(tokenKey)}`, {
                     method: 'DELETE',
                     headers: { 'x-admin-key': adminKey }
                 });
@@ -822,9 +884,26 @@
         }
 
         // Utilities
-        function copyToClipboard(text) {
-            navigator.clipboard.writeText(text);
-            showToast('Copied to clipboard', 'success');
+        async function copyToClipboard(text) {
+            try {
+                await navigator.clipboard.writeText(text);
+                showToast('Copied to clipboard', 'success');
+            } catch (err) {
+                // Fallback for older browsers or when clipboard API fails
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                textarea.style.position = 'fixed';
+                textarea.style.opacity = '0';
+                document.body.appendChild(textarea);
+                textarea.select();
+                try {
+                    document.execCommand('copy');
+                    showToast('Copied to clipboard', 'success');
+                } catch (e) {
+                    showToast('Failed to copy', 'error');
+                }
+                document.body.removeChild(textarea);
+            }
         }
 
         function refreshData() {
