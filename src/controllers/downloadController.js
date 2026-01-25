@@ -8,15 +8,10 @@ const tiktokService = new TikTokService();
 const instagramService = new InstagramService();
 const twitterService = new TwitterService();
 
-// Helper to validate and track API key usage
-function validateAndTrackKey(key) {
+// Helper to validate API key (no tracking - middleware handles that)
+function validateKey(key) {
   if (!key) return { valid: true, noKey: true }; // Allow requests without key (public rate limited)
-  
-  const validation = tokenService.validateToken(key);
-  if (validation.valid) {
-    tokenService.recordUsage(key);
-  }
-  return validation;
+  return tokenService.validateToken(key);
 }
 
 export const downloadController = {
@@ -189,7 +184,7 @@ export const downloadController = {
 
       // Validate and track API key usage
       if (key) {
-        const validation = validateAndTrackKey(key);
+        const validation = validateKey(key);
         if (!validation.valid) {
           return res.json({
             success: false,
@@ -255,7 +250,7 @@ export const downloadController = {
 
       // Validate and track API key usage
       if (key) {
-        const validation = validateAndTrackKey(key);
+        const validation = validateKey(key);
         if (!validation.valid) {
           return res.json({
             success: false,
@@ -308,7 +303,7 @@ export const downloadController = {
 
       // Validate and track API key usage
       if (key) {
-        const validation = validateAndTrackKey(key);
+        const validation = validateKey(key);
         if (!validation.valid) {
           return res.json({
             success: false,
@@ -361,7 +356,7 @@ export const downloadController = {
 
       // Validate and track API key usage
       if (key) {
-        const validation = validateAndTrackKey(key);
+        const validation = validateKey(key);
         if (!validation.valid) {
           return res.json({
             success: false,
