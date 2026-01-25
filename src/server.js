@@ -3,6 +3,8 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 import routes from './routes/index.js';
 import adminRoutes from './routes/adminRoutes.js';
 import { errorHandler } from './middleware/errorHandler.js';
@@ -10,13 +12,30 @@ import { apiKeyAuth, optionalApiKeyAuth } from './middleware/auth.js';
 
 dotenv.config();
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Security middleware
-app.use(helmet());
+// Security middleware - configure helmet to allow inline scripts for admin dashboard
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.tailwindcss.com"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
+      imgSrc: ["'self'", "data:"],
+      connectSrc: ["'self'"]
+    }
+  }
+}));
 app.use(cors());
 app.use(express.json());
+
+// Serve static files (admin dashboard)
+app.use('/admin', express.static(join(__dirname, 'public', 'admin')));
 
 // Rate limiting for unauthenticated requests (stricter)
 const publicLimiter = rateLimit({
@@ -72,11 +91,13 @@ app.listen(PORT, () => {
 ║  GET  /api/file/download   - Direct file download             ║
 ║  GET  /api/platforms       - List supported platforms         ║
 ╠═══════════════════════════════════════════════════════════════╣
-║  Admin Endpoints (X-Admin-Key required):                      ║
+║  🔧 Admin Dashboard: http://localhost:${PORT}/admin               ║
+╠═══════════════════════════════════════════════════════════════╣
+║  Admin API Endpoints (X-Admin-Key required):                  ║
+║  GET    /api/admin/stats        - Get statistics              ║
 ║  POST   /api/admin/tokens       - Create new API token        ║
 ║  GET    /api/admin/tokens       - List all tokens             ║
-║  GET    /api/admin/tokens/:t    - Get token info              ║
-║  PATCH  /api/admin/tokens/:t    - Update token                ║
+║  PUT    /api/admin/tokens/:t    - Update token                ║
 ║  DELETE /api/admin/tokens/:t    - Delete token                ║
 ╠═══════════════════════════════════════════════════════════════╣
 ║  CLI: node token-cli.js help                                  ║

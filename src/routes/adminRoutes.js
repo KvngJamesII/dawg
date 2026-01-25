@@ -29,7 +29,7 @@ router.use(adminAuth);
  */
 router.post('/tokens', (req, res) => {
   try {
-    const { name, dailyLimit = 100, totalLimit = 0, allowedEndpoints = [] } = req.body;
+    const { name, dailyLimit = 100, totalLimit = 10000, allowedEndpoints = [] } = req.body;
 
     if (!name) {
       return res.status(400).json({
@@ -41,14 +41,14 @@ router.post('/tokens', (req, res) => {
     const token = tokenService.createToken({
       name,
       dailyLimit: parseInt(dailyLimit) || 100,
-      totalLimit: parseInt(totalLimit) || 0,
+      totalLimit: parseInt(totalLimit) || 10000,
       allowedEndpoints
     });
 
     res.status(201).json({
       success: true,
       message: 'API token created successfully',
-      data: {
+      token: {
         token: token.token,
         name: token.name,
         dailyLimit: token.dailyLimit,
@@ -76,7 +76,7 @@ router.get('/tokens', (req, res) => {
     res.json({
       success: true,
       count: tokens.length,
-      data: tokens
+      tokens: tokens
     });
   } catch (error) {
     res.status(500).json({
@@ -123,10 +123,78 @@ router.get('/tokens/:token', (req, res) => {
 });
 
 /**
+ * GET /api/admin/stats
+ * Get overall API statistics
+ */
+router.get('/stats', (req, res) => {
+  try {
+    const tokens = tokenService.listTokens();
+    
+    const stats = {
+      totalTokens: tokens.length,
+      activeTokens: tokens.filter(t => t.active).length,
+      inactiveTokens: tokens.filter(t => !t.active).length,
+      totalUsage: tokens.reduce((sum, t) => sum + (t.usage?.total || 0), 0),
+      totalDailyUsage: tokens.reduce((sum, t) => sum + (t.usage?.daily || 0), 0)
+    };
+
+    res.json({
+      success: true,
+      stats
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
  * PATCH /api/admin/tokens/:token
  * Update token settings
  */
 router.patch('/tokens/:token', (req, res) => {
+  try {
+    const { name, dailyLimit, totalLimit, active } = req.body;
+    
+    const updated = tokenService.updateToken(req.params.token, {
+      name,
+      dailyLimit: dailyLimit !== undefined ? parseInt(dailyLimit) : undefined,
+      totalLimit: totalLimit !== undefined ? parseInt(totalLimit) : undefined,
+      active
+    });
+
+    if (!updated) {
+      return res.status(404).json({
+        success: false,
+        error: 'Token not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Token updated',
+      data: {
+        name: updated.name,
+        dailyLimit: updated.dailyLimit,
+        totalLimit: updated.totalLimit,
+        active: updated.active
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * PUT /api/admin/tokens/:token
+ * Update token settings (alias for PATCH)
+ */
+router.put('/tokens/:token', (req, res) => {
   try {
     const { name, dailyLimit, totalLimit, active } = req.body;
     
