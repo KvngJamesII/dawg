@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import api from '../utils/api'
 import { 
   Zap, 
-  TrendingUp, 
-  Clock, 
   Copy, 
-  CheckCircle,
-  ArrowUpRight,
+  CheckCircle2,
+  ArrowRight,
   Activity,
-  Coins
+  Coins,
+  Clock,
+  TrendingUp
 } from 'lucide-react'
 
 export default function Dashboard() {
@@ -19,7 +20,6 @@ export default function Dashboard() {
     todayRequests: 0,
     creditsUsed: 0
   })
-  const [recentActivity, setRecentActivity] = useState([])
   const [copiedKey, setCopiedKey] = useState(null)
 
   useEffect(() => {
@@ -31,7 +31,6 @@ export default function Dashboard() {
       const response = await api.get('/user/stats')
       if (response.data.success) {
         setStats(response.data.stats)
-        setRecentActivity(response.data.recentActivity || [])
       }
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error)
@@ -44,15 +43,7 @@ export default function Dashboard() {
       setCopiedKey(keyType)
       setTimeout(() => setCopiedKey(null), 2000)
     } catch (err) {
-      // Fallback
-      const textarea = document.createElement('textarea')
-      textarea.value = text
-      document.body.appendChild(textarea)
-      textarea.select()
-      document.execCommand('copy')
-      document.body.removeChild(textarea)
-      setCopiedKey(keyType)
-      setTimeout(() => setCopiedKey(null), 2000)
+      console.error('Failed to copy:', err)
     }
   }
 
@@ -61,209 +52,151 @@ export default function Dashboard() {
       icon: Coins,
       label: 'Available Credits',
       value: user?.credits || 0,
-      change: null,
-      color: 'from-green-500 to-emerald-600'
     },
     {
       icon: Activity,
       label: 'Total Requests',
       value: stats.totalRequests,
-      change: '+12%',
-      color: 'from-primary-500 to-blue-600'
     },
     {
       icon: Clock,
       label: 'Today\'s Requests',
       value: stats.todayRequests,
-      change: null,
-      color: 'from-purple-500 to-pink-600'
     },
     {
       icon: TrendingUp,
       label: 'Credits Used',
       value: stats.creditsUsed,
-      change: null,
-      color: 'from-orange-500 to-red-600'
     }
   ]
 
   const apiKeys = [
     {
       service: 'TikTok',
-      key: user?.apiKeys?.tiktok || 'No key generated',
-      color: 'bg-gradient-to-r from-pink-500 to-red-500'
+      key: user?.apiKeys?.tiktok || null,
     },
     {
       service: 'YouTube',
-      key: user?.apiKeys?.youtube || 'No key generated',
-      color: 'bg-gradient-to-r from-red-500 to-orange-500'
+      key: user?.apiKeys?.youtube || null,
     }
   ]
 
   return (
-    <div>
+    <div className="max-w-5xl">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-white mb-2">
-          Welcome back, {user?.name?.split(' ')[0] || 'Developer'}!
+        <h1 className="text-xl font-semibold text-white mb-1">
+          Welcome back, {user?.name?.split(' ')[0] || 'Developer'}
         </h1>
-        <p className="text-gray-400">
-          Here's an overview of your API usage and account status.
+        <p className="text-sm text-zinc-500">
+          Here's an overview of your API usage.
         </p>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {statCards.map((stat, index) => {
           const Icon = stat.icon
           return (
             <div
               key={index}
-              className="bg-dark-800 border border-dark-700 rounded-2xl p-6"
+              className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-4"
             >
-              <div className="flex items-start justify-between mb-4">
-                <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${stat.color} flex items-center justify-center`}>
-                  <Icon className="w-6 h-6 text-white" />
-                </div>
-                {stat.change && (
-                  <span className="flex items-center text-green-500 text-sm">
-                    <ArrowUpRight className="w-4 h-4" />
-                    {stat.change}
-                  </span>
-                )}
+              <div className="flex items-center gap-2 mb-3">
+                <Icon className="w-4 h-4 text-zinc-500" />
+                <span className="text-xs text-zinc-500">{stat.label}</span>
               </div>
-              <p className="text-gray-400 text-sm mb-1">{stat.label}</p>
-              <p className="text-3xl font-bold text-white">{stat.value.toLocaleString()}</p>
+              <p className="text-2xl font-semibold text-white">{stat.value.toLocaleString()}</p>
             </div>
           )
         })}
       </div>
 
-      {/* API Keys Section */}
+      {/* Quick Actions */}
       <div className="grid lg:grid-cols-2 gap-6 mb-8">
-        <div className="bg-dark-800 border border-dark-700 rounded-2xl p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-white">Your API Keys</h2>
-            <a
-              href="/dashboard/api-keys"
-              className="text-sm text-primary-400 hover:text-primary-300 flex items-center space-x-1"
+        {/* API Keys */}
+        <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-medium text-white">API Keys</h2>
+            <Link
+              to="/dashboard/api-keys"
+              className="text-xs text-zinc-500 hover:text-white flex items-center gap-1 transition"
             >
-              <span>Manage Keys</span>
-              <ArrowUpRight className="w-4 h-4" />
-            </a>
+              Manage
+              <ArrowRight className="w-3 h-3" />
+            </Link>
           </div>
-          <div className="space-y-4">
-            {apiKeys.map((api, index) => (
+          
+          <div className="space-y-3">
+            {apiKeys.map((item, index) => (
               <div
                 key={index}
-                className="bg-dark-900 border border-dark-600 rounded-xl p-4"
+                className="flex items-center justify-between bg-black/30 rounded-lg p-3"
               >
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center space-x-3">
-                    <div className={`w-8 h-8 rounded-lg ${api.color} flex items-center justify-center`}>
-                      <Zap className="w-4 h-4 text-white" />
-                    </div>
-                    <span className="font-medium text-white">{api.service}</span>
+                <div>
+                  <div className="text-xs text-zinc-500 mb-0.5">{item.service}</div>
+                  <div className="text-sm text-zinc-300 font-mono">
+                    {item.key ? `${item.key.substring(0, 16)}...` : 'Not generated'}
                   </div>
+                </div>
+                {item.key && (
                   <button
-                    onClick={() => copyToClipboard(api.key, api.service)}
-                    className="p-2 hover:bg-dark-700 rounded-lg transition"
+                    onClick={() => copyToClipboard(item.key, item.service)}
+                    className="text-zinc-500 hover:text-white transition p-1"
                   >
-                    {copiedKey === api.service ? (
-                      <CheckCircle className="w-5 h-5 text-green-500" />
+                    {copiedKey === item.service ? (
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500" />
                     ) : (
-                      <Copy className="w-5 h-5 text-gray-400" />
+                      <Copy className="w-4 h-4" />
                     )}
                   </button>
-                </div>
-                <code className="text-sm text-gray-400 break-all">
-                  {api.key.length > 40 ? api.key.slice(0, 20) + '...' + api.key.slice(-10) : api.key}
-                </code>
+                )}
               </div>
             ))}
           </div>
         </div>
 
         {/* Quick Start */}
-        <div className="bg-dark-800 border border-dark-700 rounded-2xl p-6">
-          <h2 className="text-lg font-semibold text-white mb-6">Quick Start</h2>
-          <div className="space-y-4">
-            <div className="bg-dark-900 rounded-xl p-4">
-              <p className="text-sm text-gray-400 mb-2">TikTok Video Download</p>
-              <code className="text-xs text-primary-400 break-all">
-                GET /api/tiktok?url=VIDEO_URL&key=YOUR_API_KEY
+        <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-5">
+          <h2 className="text-sm font-medium text-white mb-4">Quick Start</h2>
+          
+          <div className="bg-black rounded-lg p-3 mb-4">
+            <pre className="text-xs text-zinc-400 overflow-x-auto">
+              <code>
+                curl -X GET \{'\n'}
+                {'  '}"https://api.idledeveloper.tech/api/tiktok?url=VIDEO_URL" \{'\n'}
+                {'  '}-H "X-API-Key: YOUR_KEY"
               </code>
-            </div>
-            <div className="bg-dark-900 rounded-xl p-4">
-              <p className="text-sm text-gray-400 mb-2">YouTube Audio Extraction</p>
-              <code className="text-xs text-primary-400 break-all">
-                GET /api/youtube?url=VIDEO_URL&key=YOUR_API_KEY
-              </code>
-            </div>
+            </pre>
           </div>
-          <a
-            href="/docs"
-            className="mt-6 w-full py-3 border border-primary-500 text-primary-400 rounded-xl font-medium hover:bg-primary-500/10 transition flex items-center justify-center space-x-2"
+
+          <Link
+            to="/docs"
+            className="text-xs text-zinc-500 hover:text-white flex items-center gap-1 transition"
           >
-            <span>View Full Documentation</span>
-            <ArrowUpRight className="w-4 h-4" />
-          </a>
+            View full documentation
+            <ArrowRight className="w-3 h-3" />
+          </Link>
         </div>
       </div>
 
-      {/* Credit Alert */}
+      {/* Low Credits Warning */}
       {user?.credits < 10 && (
-        <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-2xl p-6 mb-8">
-          <div className="flex items-start space-x-4">
-            <div className="w-12 h-12 rounded-xl bg-yellow-500/20 flex items-center justify-center flex-shrink-0">
-              <Coins className="w-6 h-6 text-yellow-500" />
+        <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-amber-500/20 rounded-lg flex items-center justify-center">
+              <Zap className="w-4 h-4 text-amber-500" />
             </div>
-            <div className="flex-1">
-              <h3 className="text-yellow-500 font-semibold mb-1">Low Credit Balance</h3>
-              <p className="text-gray-400 text-sm mb-4">
-                You have only {user?.credits} credits remaining. Purchase more credits to continue using the API.
-              </p>
-              <a
-                href="/dashboard/purchase"
-                className="inline-flex items-center space-x-2 px-4 py-2 bg-yellow-500 text-black rounded-lg font-medium hover:bg-yellow-400 transition"
-              >
-                <span>Buy Credits</span>
-                <ArrowUpRight className="w-4 h-4" />
-              </a>
+            <div>
+              <p className="text-sm text-white">Running low on credits</p>
+              <p className="text-xs text-zinc-500">You have {user?.credits} credits remaining</p>
             </div>
           </div>
+          <Link to="/dashboard/purchase" className="btn-primary px-4 py-1.5 text-sm">
+            Buy Credits
+          </Link>
         </div>
       )}
-
-      {/* Recent Activity */}
-      <div className="bg-dark-800 border border-dark-700 rounded-2xl p-6">
-        <h2 className="text-lg font-semibold text-white mb-6">Recent Activity</h2>
-        {recentActivity.length > 0 ? (
-          <div className="space-y-3">
-            {recentActivity.map((activity, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between py-3 border-b border-dark-700 last:border-0"
-              >
-                <div className="flex items-center space-x-3">
-                  <div className={`w-2 h-2 rounded-full ${activity.success ? 'bg-green-500' : 'bg-red-500'}`} />
-                  <div>
-                    <p className="text-white text-sm">{activity.endpoint}</p>
-                    <p className="text-gray-500 text-xs">{activity.timestamp}</p>
-                  </div>
-                </div>
-                <span className="text-gray-400 text-sm">-1 credit</span>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-8">
-            <Activity className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-            <p className="text-gray-400">No recent activity</p>
-            <p className="text-gray-500 text-sm">Start making API requests to see your activity here</p>
-          </div>
-        )}
-      </div>
     </div>
   )
 }

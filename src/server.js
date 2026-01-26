@@ -5,6 +5,7 @@ import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import { existsSync } from 'fs';
 import routes from './routes/index.js';
 import adminRoutes, { isApiKeyRequired } from './routes/adminRoutes.js';
 import authRoutes from './routes/authRoutes.js';
@@ -75,12 +76,17 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    error: 'Endpoint not found'
-  });
+// Serve React app for all other routes (client-side routing)
+app.get('*', (req, res) => {
+  const indexPath = join(__dirname, '..', 'frontend', 'dist', 'index.html');
+  if (existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.status(404).json({
+      success: false,
+      error: 'Frontend not built. Run: cd frontend && npm run build'
+    });
+  }
 });
 
 // Error handler

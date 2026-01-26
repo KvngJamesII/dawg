@@ -45,26 +45,26 @@ export default function DashboardLayout({ isAdmin = false }) {
   }
 
   return (
-    <div className="min-h-screen bg-dark-900 flex">
+    <div className="min-h-screen bg-[#09090b] flex">
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-dark-950 border-r border-dark-800 transform ${
+        className={`fixed inset-y-0 left-0 z-50 w-60 bg-black border-r border-zinc-900 transform ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         } md:translate-x-0 transition-transform duration-200 ease-in-out`}
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="flex items-center justify-between h-16 px-4 border-b border-dark-800">
-            <Link to="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 gradient-bg rounded-lg flex items-center justify-center">
-                <Zap className="w-5 h-5 text-white" />
+          <div className="flex items-center justify-between h-14 px-4 border-b border-zinc-900">
+            <Link to="/" className="flex items-center gap-2">
+              <div className="w-7 h-7 bg-white rounded-lg flex items-center justify-center">
+                <Zap className="w-4 h-4 text-black" />
               </div>
-              <span className="text-lg font-bold text-white">
+              <span className="text-sm font-semibold text-white">
                 {isAdmin ? 'Admin' : 'IdleDev'}
               </span>
             </Link>
             <button
-              className="md:hidden text-gray-400 hover:text-white"
+              className="md:hidden text-zinc-500 hover:text-white"
               onClick={() => setSidebarOpen(false)}
             >
               <X className="w-5 h-5" />
@@ -73,22 +73,22 @@ export default function DashboardLayout({ isAdmin = false }) {
 
           {/* Credits display (for users) */}
           {!isAdmin && (
-            <div className="px-4 py-4 border-b border-dark-800">
-              <div className="bg-dark-800 rounded-xl p-4">
-                <div className="text-xs text-gray-400 mb-1">Available Credits</div>
-                <div className="text-2xl font-bold gradient-text">{user?.credits || 0}</div>
+            <div className="px-3 py-4 border-b border-zinc-900">
+              <div className="bg-zinc-900/50 rounded-lg p-3">
+                <div className="text-xs text-zinc-500 mb-1">Credits</div>
+                <div className="text-xl font-semibold text-white">{user?.credits || 0}</div>
                 <Link
                   to="/dashboard/purchase"
-                  className="mt-2 text-xs text-primary-400 hover:text-primary-300 transition"
+                  className="mt-2 inline-block text-xs text-zinc-400 hover:text-white transition"
                 >
-                  Buy more credits →
+                  Buy more →
                 </Link>
               </div>
             </div>
           )}
 
           {/* Navigation */}
-          <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
+          <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
             {navItems.map((item) => {
               const Icon = item.icon
               const isActive = location.pathname === item.path
@@ -96,15 +96,15 @@ export default function DashboardLayout({ isAdmin = false }) {
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`flex items-center space-x-3 px-3 py-2.5 rounded-lg transition ${
+                  className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition ${
                     isActive
-                      ? 'bg-primary-600/20 text-primary-400'
-                      : 'text-gray-400 hover:bg-dark-800 hover:text-white'
+                      ? 'bg-zinc-800 text-white'
+                      : 'text-zinc-500 hover:bg-zinc-900 hover:text-white'
                   }`}
                   onClick={() => setSidebarOpen(false)}
                 >
-                  <Icon className="w-5 h-5" />
-                  <span className="font-medium">{item.name}</span>
+                  <Icon className="w-4 h-4" />
+                  <span>{item.name}</span>
                 </Link>
               )
             })}
@@ -112,25 +112,25 @@ export default function DashboardLayout({ isAdmin = false }) {
 
           {/* Switch between admin/user */}
           {user?.isAdmin && (
-            <div className="px-4 py-3 border-t border-dark-800">
+            <div className="px-3 py-3 border-t border-zinc-900">
               <Link
                 to={isAdmin ? '/dashboard' : '/admin'}
-                className="flex items-center space-x-3 px-3 py-2.5 text-gray-400 hover:bg-dark-800 hover:text-white rounded-lg transition"
+                className="flex items-center gap-3 px-3 py-2 text-sm text-zinc-500 hover:bg-zinc-900 hover:text-white rounded-lg transition"
               >
-                <LayoutDashboard className="w-5 h-5" />
-                <span className="font-medium">{isAdmin ? 'User Dashboard' : 'Admin Panel'}</span>
+                <LayoutDashboard className="w-4 h-4" />
+                <span>{isAdmin ? 'User Dashboard' : 'Admin Panel'}</span>
               </Link>
             </div>
           )}
 
           {/* User section */}
-          <div className="px-4 py-4 border-t border-dark-800">
+          <div className="px-3 py-4 border-t border-zinc-900">
             <button
               onClick={handleLogout}
-              className="flex items-center space-x-3 px-3 py-2.5 text-gray-400 hover:bg-dark-800 hover:text-white rounded-lg transition w-full"
+              className="flex items-center gap-3 px-3 py-2 text-sm text-zinc-500 hover:bg-zinc-900 hover:text-white rounded-lg transition w-full"
             >
-              <LogOut className="w-5 h-5" />
-              <span className="font-medium">Logout</span>
+              <LogOut className="w-4 h-4" />
+              <span>Logout</span>
             </button>
           </div>
         </div>
@@ -145,18 +145,18 @@ export default function DashboardLayout({ isAdmin = false }) {
       )}
 
       {/* Main content */}
-      <div className="flex-1 md:ml-64">
+      <div className="flex-1 md:ml-60">
         {/* Top bar */}
-        <header className="sticky top-0 z-30 h-16 bg-dark-900/80 backdrop-blur-lg border-b border-dark-800 flex items-center justify-between px-4 md:px-6">
+        <header className="sticky top-0 z-30 h-14 bg-[#09090b]/80 backdrop-blur-md border-b border-zinc-900 flex items-center justify-between px-4 md:px-6">
           <button
-            className="md:hidden text-gray-400 hover:text-white"
+            className="md:hidden text-zinc-500 hover:text-white"
             onClick={() => setSidebarOpen(true)}
           >
-            <Menu className="w-6 h-6" />
+            <Menu className="w-5 h-5" />
           </button>
 
           <div className="hidden md:block">
-            <h1 className="text-lg font-semibold text-white">
+            <h1 className="text-sm font-medium text-white">
               {navItems.find((item) => item.path === location.pathname)?.name || 'Dashboard'}
             </h1>
           </div>
@@ -165,13 +165,13 @@ export default function DashboardLayout({ isAdmin = false }) {
           <div className="relative">
             <button
               onClick={() => setUserMenuOpen(!userMenuOpen)}
-              className="flex items-center space-x-2 text-gray-300 hover:text-white"
+              className="flex items-center gap-2 text-zinc-400 hover:text-white transition"
             >
-              <div className="w-8 h-8 gradient-bg rounded-full flex items-center justify-center text-white font-semibold">
+              <div className="w-7 h-7 bg-zinc-800 rounded-full flex items-center justify-center text-white text-sm font-medium">
                 {user?.name?.charAt(0).toUpperCase() || 'U'}
               </div>
-              <span className="hidden sm:block font-medium">{user?.name}</span>
-              <ChevronDown className="w-4 h-4" />
+              <span className="hidden sm:block text-sm">{user?.name}</span>
+              <ChevronDown className="w-3 h-3" />
             </button>
 
             {userMenuOpen && (
@@ -180,15 +180,15 @@ export default function DashboardLayout({ isAdmin = false }) {
                   className="fixed inset-0 z-10"
                   onClick={() => setUserMenuOpen(false)}
                 />
-                <div className="absolute right-0 mt-2 w-48 bg-dark-800 border border-dark-700 rounded-lg shadow-xl z-20">
-                  <div className="px-4 py-3 border-b border-dark-700">
-                    <div className="text-sm text-white font-medium">{user?.name}</div>
-                    <div className="text-xs text-gray-400">{user?.email}</div>
+                <div className="absolute right-0 mt-2 w-48 bg-zinc-900 border border-zinc-800 rounded-lg shadow-xl z-20">
+                  <div className="px-4 py-3 border-b border-zinc-800">
+                    <div className="text-sm text-white">{user?.name}</div>
+                    <div className="text-xs text-zinc-500">{user?.email}</div>
                   </div>
-                  <div className="py-2">
+                  <div className="py-1">
                     <Link
                       to="/dashboard/settings"
-                      className="block px-4 py-2 text-sm text-gray-300 hover:bg-dark-700 hover:text-white"
+                      className="block px-4 py-2 text-sm text-zinc-400 hover:bg-zinc-800 hover:text-white"
                       onClick={() => setUserMenuOpen(false)}
                     >
                       Settings
@@ -198,7 +198,7 @@ export default function DashboardLayout({ isAdmin = false }) {
                         setUserMenuOpen(false)
                         handleLogout()
                       }}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-dark-700 hover:text-white"
+                      className="block w-full text-left px-4 py-2 text-sm text-zinc-400 hover:bg-zinc-800 hover:text-white"
                     >
                       Logout
                     </button>

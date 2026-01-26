@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { Mail, Lock, User, ArrowRight, AlertCircle, Loader2, CheckCircle } from 'lucide-react'
+import { ArrowRight, AlertCircle, Loader2, CheckCircle2, Zap } from 'lucide-react'
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -49,176 +49,148 @@ export default function Register() {
     }
   }
 
-  const benefits = [
-    '25 free API credits',
-    'TikTok video downloads',
-    'YouTube audio extraction',
-    'No credit card required'
-  ]
-
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-5xl grid md:grid-cols-2 gap-12 items-center">
+      <div className="w-full max-w-4xl grid md:grid-cols-5 gap-12 items-start">
         {/* Left side - Benefits */}
-        <div className="hidden md:block">
-          <h2 className="text-3xl font-bold text-white mb-4">
-            Start Building with Our <span className="gradient-text">Powerful APIs</span>
+        <div className="hidden md:block md:col-span-2 pt-8">
+          <div className="inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-400 text-xs font-medium px-2.5 py-1 rounded-full mb-6">
+            <Zap className="w-3 h-3" />
+            Free to start
+          </div>
+          
+          <h2 className="text-2xl font-semibold text-white mb-4">
+            Build with our Video API
           </h2>
-          <p className="text-gray-400 mb-8">
-            Join hundreds of developers using our fast, reliable APIs for social media content downloads.
+          <p className="text-sm text-zinc-500 mb-8 leading-relaxed">
+            Fast, reliable API for downloading TikTok videos and extracting YouTube audio.
           </p>
-          <div className="space-y-4">
-            {benefits.map((benefit, index) => (
-              <div key={index} className="flex items-center space-x-3">
-                <div className="w-6 h-6 rounded-full gradient-bg flex items-center justify-center">
-                  <CheckCircle className="w-4 h-4 text-white" />
-                </div>
-                <span className="text-gray-300">{benefit}</span>
+          
+          <div className="space-y-3">
+            {[
+              '25 free API credits',
+              'TikTok video downloads',
+              'YouTube audio extraction',
+              'No credit card required'
+            ].map((benefit, index) => (
+              <div key={index} className="flex items-center gap-3">
+                <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                <span className="text-sm text-zinc-400">{benefit}</span>
               </div>
             ))}
-          </div>
-
-          <div className="mt-12 p-6 bg-dark-800 border border-dark-700 rounded-2xl">
-            <div className="flex items-start space-x-4">
-              <div className="w-12 h-12 rounded-full bg-primary-500/20 flex items-center justify-center flex-shrink-0">
-                <User className="w-6 h-6 text-primary-400" />
-              </div>
-              <div>
-                <p className="text-gray-300 italic mb-2">
-                  "The API is incredibly fast and reliable. Integration took less than 10 minutes!"
-                </p>
-                <p className="text-sm text-gray-500">— Happy Developer</p>
-              </div>
-            </div>
           </div>
         </div>
 
         {/* Right side - Form */}
-        <div className="w-full max-w-md mx-auto md:mx-0">
-          {/* Header */}
+        <div className="md:col-span-3 w-full max-w-sm mx-auto md:mx-0 md:ml-auto">
           <div className="text-center md:text-left mb-8">
-            <h1 className="text-3xl font-bold text-white mb-2">Create Account</h1>
-            <p className="text-gray-400">
+            <h1 className="text-2xl font-semibold text-white mb-2">Create an account</h1>
+            <p className="text-sm text-zinc-500">
               Get started with 25 free credits
             </p>
           </div>
 
-          {/* Form Card */}
-          <div className="bg-dark-800 border border-dark-700 rounded-2xl p-8">
+          <div className="space-y-6">
             {error && (
-              <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-start space-x-3">
-                <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+              <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-start gap-3">
+                <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
                 <p className="text-red-400 text-sm">{error}</p>
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-2">
-                  Full Name
+                <label htmlFor="name" className="block text-sm font-medium text-zinc-300 mb-2">
+                  Name
                 </label>
-                <div className="relative">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-                  <input
-                    id="name"
-                    name="name"
-                    type="text"
-                    value={formData.name}
-                    onChange={handleChange}
-                    placeholder="John Doe"
-                    className="w-full bg-dark-900 border border-dark-600 rounded-xl py-3 pl-12 pr-4 text-white placeholder-gray-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition"
-                    required
-                  />
-                </div>
+                <input
+                  id="name"
+                  name="name"
+                  type="text"
+                  value={formData.name}
+                  onChange={handleChange}
+                  placeholder="John Doe"
+                  className="input-field"
+                  required
+                />
               </div>
 
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
-                  Email Address
+                <label htmlFor="email" className="block text-sm font-medium text-zinc-300 mb-2">
+                  Email
                 </label>
-                <div className="relative">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-                  <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    placeholder="you@example.com"
-                    className="w-full bg-dark-900 border border-dark-600 rounded-xl py-3 pl-12 pr-4 text-white placeholder-gray-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition"
-                    required
-                  />
-                </div>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  placeholder="you@example.com"
+                  className="input-field"
+                  required
+                />
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
+                <label htmlFor="password" className="block text-sm font-medium text-zinc-300 mb-2">
                   Password
                 </label>
-                <div className="relative">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-                  <input
-                    id="password"
-                    name="password"
-                    type="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    placeholder="••••••••"
-                    className="w-full bg-dark-900 border border-dark-600 rounded-xl py-3 pl-12 pr-4 text-white placeholder-gray-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition"
-                    required
-                  />
-                </div>
-                <p className="text-xs text-gray-500 mt-1">Minimum 6 characters</p>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  placeholder="••••••••"
+                  className="input-field"
+                  required
+                />
               </div>
 
               <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 mb-2">
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-zinc-300 mb-2">
                   Confirm Password
                 </label>
-                <div className="relative">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-                  <input
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    type="password"
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    placeholder="••••••••"
-                    className="w-full bg-dark-900 border border-dark-600 rounded-xl py-3 pl-12 pr-4 text-white placeholder-gray-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition"
-                    required
-                  />
-                </div>
+                <input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type="password"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  placeholder="••••••••"
+                  className="input-field"
+                  required
+                />
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 gradient-bg text-white rounded-xl font-semibold btn-hover flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="btn-primary w-full py-2.5 mt-2"
               >
                 {loading ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Creating account...
+                  </>
                 ) : (
                   <>
-                    <span>Create Account</span>
-                    <ArrowRight className="w-5 h-5" />
+                    Create account
+                    <ArrowRight className="w-4 h-4" />
                   </>
                 )}
               </button>
             </form>
 
-            <div className="mt-6 text-center">
-              <p className="text-gray-400">
+            <div className="text-center">
+              <p className="text-sm text-zinc-500">
                 Already have an account?{' '}
-                <Link to="/login" className="text-primary-400 hover:text-primary-300 font-medium">
+                <Link to="/login" className="text-white hover:underline">
                   Sign in
                 </Link>
               </p>
             </div>
           </div>
-
-          <p className="mt-6 text-xs text-gray-500 text-center">
-            By creating an account, you agree to our Terms of Service and Privacy Policy.
-          </p>
         </div>
       </div>
     </div>
