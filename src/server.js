@@ -7,6 +7,9 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import routes from './routes/index.js';
 import adminRoutes, { isApiKeyRequired } from './routes/adminRoutes.js';
+import authRoutes from './routes/authRoutes.js';
+import userRoutes from './routes/userRoutes.js';
+import userAdminRoutes from './routes/userAdminRoutes.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { apiKeyAuth, optionalApiKeyAuth } from './middleware/auth.js';
 
@@ -29,6 +32,9 @@ app.use(express.json());
 // Serve static files (admin dashboard)
 app.use('/admin', express.static(join(__dirname, 'public', 'admin')));
 
+// Serve frontend build (if exists)
+app.use(express.static(join(__dirname, '..', 'frontend', 'dist')));
+
 // Rate limiting for unauthenticated requests (stricter)
 const publicLimiter = rateLimit({
   windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000,
@@ -40,8 +46,17 @@ const publicLimiter = rateLimit({
   skip: (req) => req.apiToken // Skip if authenticated
 });
 
-// Admin routes (separate, always need admin key)
-app.use('/api/admin', adminRoutes);
+// Auth routes (no auth required)
+app.use('/api/auth', authRoutes);
+
+// User routes (JWT auth required)
+app.use('/api/user', userRoutes);
+
+// User admin routes (JWT + isAdmin required)  
+app.use('/api/admin', userAdminRoutes);
+
+// Token admin routes (X-Admin-Key required - legacy)
+app.use('/api/token-admin', adminRoutes);
 
 // Dynamic auth middleware that checks runtime settings
 function dynamicAuth(req, res, next) {
