@@ -11,6 +11,7 @@ import adminRoutes, { isApiKeyRequired } from './routes/adminRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import userAdminRoutes from './routes/userAdminRoutes.js';
+import paymentRoutes from './routes/paymentRoutes.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { apiKeyAuth, optionalApiKeyAuth } from './middleware/auth.js';
 
@@ -56,6 +57,9 @@ app.use('/api/user', userRoutes);
 // User admin routes (JWT + isAdmin required)  
 app.use('/api/admin', userAdminRoutes);
 
+// Payment routes
+app.use('/api/payments', paymentRoutes);
+
 // Token admin routes (X-Admin-Key required - legacy)
 app.use('/api/token-admin', adminRoutes);
 
@@ -95,28 +99,25 @@ app.use(errorHandler);
 app.listen(PORT, () => {
   console.log(`
 ╔═══════════════════════════════════════════════════════════════╗
-║     🎬 Social Media Video Downloader API                      ║
+║     🎬 IdleDeveloper API Platform                             ║
 ║     Running on http://localhost:${PORT}                          ║
 ╠═══════════════════════════════════════════════════════════════╣
-║  API Endpoints (Auth configurable via admin):                 ║
+║  API Endpoints:                                               ║
 ║  POST /api/download        - Download from any platform       ║
 ║  POST /api/tiktok          - Download TikTok videos           ║
 ║  POST /api/instagram       - Download Instagram Reels         ║
 ║  POST /api/twitter         - Download Twitter/X videos        ║
-║  GET  /api/file/download   - Direct file download             ║
-║  GET  /api/platforms       - List supported platforms         ║
+║  GET  /api/youtube         - Extract YouTube audio            ║
 ╠═══════════════════════════════════════════════════════════════╣
-║  🔧 Admin Dashboard: http://localhost:${PORT}/admin               ║
+║  Auth Endpoints:                                              ║
+║  POST /api/auth/register   - Register new user                ║
+║  POST /api/auth/login      - Login user                       ║
+║  GET  /api/auth/google     - Google OAuth                     ║
 ╠═══════════════════════════════════════════════════════════════╣
-║  Admin API Endpoints (X-Admin-Key required):                  ║
-║  GET    /api/admin/stats        - Get statistics              ║
-║  POST   /api/admin/tokens       - Create new API token        ║
-║  GET    /api/admin/tokens       - List all tokens             ║
-║  PUT    /api/admin/tokens/:t    - Update token                ║
-║  DELETE /api/admin/tokens/:t    - Delete token                ║
-║  GET/PUT /api/admin/settings    - API settings                ║
-╠═══════════════════════════════════════════════════════════════╣
-║  CLI: node token-cli.js help                                  ║
+║  Payment Endpoints:                                           ║
+║  GET  /api/payments/packages    - Get credit packages         ║
+║  POST /api/payments/initialize  - Start payment               ║
+║  GET  /api/payments/verify/:ref - Verify payment              ║
 ╚═══════════════════════════════════════════════════════════════╝
   `);
 });

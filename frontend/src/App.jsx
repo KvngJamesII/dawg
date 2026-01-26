@@ -10,6 +10,10 @@ import Home from './pages/Home'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import Docs from './pages/Docs'
+import AuthCallback from './pages/AuthCallback'
+import TermsOfService from './pages/TermsOfService'
+import PrivacyPolicy from './pages/PrivacyPolicy'
+import Contact from './pages/Contact'
 
 // Protected pages
 import Dashboard from './pages/Dashboard'
@@ -28,8 +32,8 @@ function ProtectedRoute({ children, adminOnly = false }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-dark-900">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
+      <div className="min-h-screen flex items-center justify-center bg-[#09090b]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-emerald-500"></div>
       </div>
     )
   }
@@ -54,6 +58,10 @@ function App() {
         <Route path="/docs" element={<Docs />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/terms" element={<TermsOfService />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
       </Route>
 
       {/* Protected dashboard routes */}

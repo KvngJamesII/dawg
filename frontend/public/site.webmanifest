@@ -1,0 +1,23 @@
+{
+  "name": "IdleDeveloper API",
+  "short_name": "IdleDev API",
+  "description": "Powerful APIs for Modern Developers",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#09090b",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "categories": ["developer", "utilities", "productivity"]
+}
