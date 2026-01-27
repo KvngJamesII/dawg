@@ -14,6 +14,12 @@ import AuthCallback from './pages/AuthCallback'
 import TermsOfService from './pages/TermsOfService'
 import PrivacyPolicy from './pages/PrivacyPolicy'
 import Contact from './pages/Contact'
+import About from './pages/About'
+import Blog from './pages/Blog'
+import Careers from './pages/Careers'
+import Status from './pages/Status'
+import Changelog from './pages/Changelog'
+import CookiePolicy from './pages/CookiePolicy'
 
 // Protected pages
 import Dashboard from './pages/Dashboard'
@@ -61,6 +67,12 @@ function App() {
         <Route path="/terms" element={<TermsOfService />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/blog" element={<Blog />} />
+        <Route path="/careers" element={<Careers />} />
+        <Route path="/status" element={<Status />} />
+        <Route path="/changelog" element={<Changelog />} />
+        <Route path="/cookies" element={<CookiePolicy />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
       </Route>
 
