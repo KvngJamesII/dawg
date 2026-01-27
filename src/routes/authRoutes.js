@@ -5,6 +5,10 @@ import {
   getUserById,
   verifyToken
 } from '../services/userService.js';
+import {
+  getGoogleAuthUrl,
+  handleGoogleCallback
+} from '../services/googleAuthService.js';
 
 const router = express.Router();
 
@@ -108,6 +112,43 @@ router.get('/me', async (req, res) => {
       success: false,
       error: error.message
     });
+  }
+});
+
+// Google OAuth - Initiate
+router.get('/google', (req, res) => {
+  try {
+    const { url } = getGoogleAuthUrl();
+    res.redirect(url);
+  } catch (error) {
+    // If Google OAuth is not configured, redirect with error
+    const frontendUrl = process.env.FRONTEND_URL || '';
+    res.redirect(`${frontendUrl}/login?error=${encodeURIComponent('Google login is not configured. Please contact support.')}`);
+  }
+});
+
+// Google OAuth - Callback
+router.get('/google/callback', async (req, res) => {
+  const frontendUrl = process.env.FRONTEND_URL || '';
+  
+  try {
+    const { code, error } = req.query;
+
+    if (error) {
+      return res.redirect(`${frontendUrl}/login?error=${encodeURIComponent('Google login was cancelled')}`);
+    }
+
+    if (!code) {
+      return res.redirect(`${frontendUrl}/login?error=${encodeURIComponent('No authorization code received')}`);
+    }
+
+    const result = await handleGoogleCallback(code);
+    
+    // Redirect to frontend with token
+    res.redirect(`${frontendUrl}/auth/callback?token=${result.token}`);
+  } catch (error) {
+    console.error('Google OAuth error:', error);
+    res.redirect(`${frontendUrl}/login?error=${encodeURIComponent('Failed to authenticate with Google')}`);
   }
 });
 

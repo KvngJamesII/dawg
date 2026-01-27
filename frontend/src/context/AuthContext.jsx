@@ -28,17 +28,37 @@ export function AuthProvider({ children }) {
   }
 
   const login = async (email, password) => {
-    const res = await api.post('/auth/login', { email, password })
-    localStorage.setItem('token', res.data.token)
-    setUser(res.data.user)
-    return res.data
+    try {
+      const res = await api.post('/auth/login', { email, password })
+      if (res.data.success) {
+        localStorage.setItem('token', res.data.token)
+        setUser(res.data.user)
+        return { success: true }
+      }
+      return { success: false, error: res.data.error }
+    } catch (err) {
+      return { success: false, error: err.response?.data?.error || 'Login failed' }
+    }
   }
 
   const register = async (name, email, password) => {
-    const res = await api.post('/auth/register', { name, email, password })
-    localStorage.setItem('token', res.data.token)
-    setUser(res.data.user)
-    return res.data
+    try {
+      const res = await api.post('/auth/register', { name, email, password })
+      if (res.data.success) {
+        localStorage.setItem('token', res.data.token)
+        setUser(res.data.user)
+        return { success: true }
+      }
+      return { success: false, error: res.data.error }
+    } catch (err) {
+      return { success: false, error: err.response?.data?.error || 'Registration failed' }
+    }
+  }
+
+  // Set auth from token (used for OAuth callbacks)
+  const setAuthFromToken = async (token) => {
+    localStorage.setItem('token', token)
+    await fetchUser()
   }
 
   const logout = () => {
@@ -51,7 +71,16 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, loading, refreshUser, fetchUser: refreshUser }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      login, 
+      register, 
+      logout, 
+      loading, 
+      refreshUser,
+      fetchUser: refreshUser,
+      setAuthFromToken 
+    }}>
       {children}
     </AuthContext.Provider>
   )
