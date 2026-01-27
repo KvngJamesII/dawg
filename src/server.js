@@ -24,6 +24,9 @@ dotenv.config({ path: join(__dirname, '..', '.env') });
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Trust proxy (needed when behind Nginx/reverse proxy)
+app.set('trust proxy', 1);
+
 // Security middleware - configure helmet to allow inline scripts for admin dashboard
 app.use(helmet({
   contentSecurityPolicy: false  // Disable CSP for now to allow dashboard
