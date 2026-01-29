@@ -2,3 +2,6 @@ node_modules/
 .env
 *.mp4
 .DS_Store
+# Database files - don't overwrite server data
+src/database/users.json
+src/database/tokens.json
