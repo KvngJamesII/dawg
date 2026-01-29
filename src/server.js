@@ -76,8 +76,8 @@ function dynamicAuth(req, res, next) {
   }
 }
 
-// Routes - with dynamic auth based on runtime settings
-app.use('/api', publicLimiter, dynamicAuth, routes);
+// Routes - auth first, then rate limit (so we can skip rate limit for authenticated users)
+app.use('/api', dynamicAuth, publicLimiter, routes);
 
 // Health check
 app.get('/health', (req, res) => {
