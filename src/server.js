@@ -48,7 +48,8 @@ const publicLimiter = rateLimit({
     success: false,
     error: 'Too many requests, please try again later. Get an API key for higher limits!'
   },
-  skip: (req) => req.apiToken // Skip if authenticated
+  skip: (req) => req.apiToken || req.apiUser, // Skip if authenticated (admin token or user API key)
+  validate: { xForwardedForHeader: false } // Disable X-Forwarded-For validation (we handle trust proxy)
 });
 
 // Auth routes (no auth required)
