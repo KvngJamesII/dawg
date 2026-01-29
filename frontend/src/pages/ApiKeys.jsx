@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
+import { useTheme } from '../context/ThemeContext'
 import api from '../utils/api'
 import { 
   Key, 
@@ -15,6 +16,8 @@ import {
 
 export default function ApiKeys() {
   const { user, fetchUser } = useAuth()
+  const { theme } = useTheme()
+  const isDark = theme === 'dark'
   const [regenerating, setRegenerating] = useState(null)
   const [copiedKey, setCopiedKey] = useState(null)
   const [visibleKeys, setVisibleKeys] = useState({})
@@ -109,8 +112,8 @@ export default function ApiKeys() {
     <div className="max-w-3xl">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-xl font-semibold text-white mb-1">API Keys</h1>
-        <p className="text-sm text-zinc-500">
+        <h1 className={`text-xl font-semibold mb-1 ${isDark ? 'text-white' : 'text-zinc-900'}`}>API Keys</h1>
+        <p className={`text-sm ${isDark ? 'text-zinc-500' : 'text-zinc-600'}`}>
           Manage your API keys for each service.
         </p>
       </div>
@@ -140,26 +143,36 @@ export default function ApiKeys() {
           return (
             <div
               key={service.id}
-              className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-5"
+              className={`rounded-xl p-5 ${
+                isDark 
+                  ? 'bg-zinc-900/50 border border-zinc-800/50' 
+                  : 'bg-white border border-zinc-200 shadow-sm'
+              }`}
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-zinc-800 rounded-lg flex items-center justify-center">
-                    <Key className="w-5 h-5 text-zinc-400" />
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                    isDark ? 'bg-zinc-800' : 'bg-zinc-100'
+                  }`}>
+                    <Key className={`w-5 h-5 ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`} />
                   </div>
                   <div>
-                    <h3 className="text-sm font-medium text-white">{service.name} API</h3>
-                    <p className="text-xs text-zinc-500">{service.description}</p>
+                    <h3 className={`text-sm font-medium ${isDark ? 'text-white' : 'text-zinc-900'}`}>{service.name} API</h3>
+                    <p className={`text-xs ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>{service.description}</p>
                   </div>
                 </div>
-                <span className={`px-2 py-0.5 rounded text-xs font-medium ${apiKey ? 'bg-emerald-500/10 text-emerald-400' : 'bg-zinc-800 text-zinc-500'}`}>
+                <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                  apiKey 
+                    ? 'bg-emerald-500/10 text-emerald-500' 
+                    : isDark ? 'bg-zinc-800 text-zinc-500' : 'bg-zinc-200 text-zinc-500'
+                }`}>
                   {apiKey ? 'Active' : 'Inactive'}
                 </span>
               </div>
 
               {apiKey ? (
                 <>
-                  <div className="bg-black rounded-lg p-3 mb-4">
+                  <div className={`rounded-lg p-3 mb-4 ${isDark ? 'bg-black' : 'bg-zinc-900'}`}>
                     <div className="flex items-center justify-between gap-3">
                       <code className="text-sm text-zinc-400 font-mono break-all flex-1">
                         {isVisible ? apiKey : maskKey(apiKey)}
@@ -167,7 +180,7 @@ export default function ApiKeys() {
                       <div className="flex items-center gap-1 flex-shrink-0">
                         <button
                           onClick={() => toggleKeyVisibility(service.id)}
-                          className="p-1.5 hover:bg-zinc-800 rounded transition"
+                          className={`p-1.5 rounded transition ${isDark ? 'hover:bg-zinc-800' : 'hover:bg-zinc-700'}`}
                           title={isVisible ? 'Hide key' : 'Show key'}
                         >
                           {isVisible ? (
@@ -178,7 +191,7 @@ export default function ApiKeys() {
                         </button>
                         <button
                           onClick={() => copyToClipboard(apiKey, service.id)}
-                          className="p-1.5 hover:bg-zinc-800 rounded transition"
+                          className={`p-1.5 rounded transition ${isDark ? 'hover:bg-zinc-800' : 'hover:bg-zinc-700'}`}
                           title="Copy key"
                         >
                           {copiedKey === service.id ? (
@@ -192,13 +205,15 @@ export default function ApiKeys() {
                   </div>
 
                   <div className="flex items-center justify-between">
-                    <div className="text-xs text-zinc-500">
-                      Endpoint: <code className="text-zinc-400">{service.endpoint}</code>
+                    <div className={`text-xs ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>
+                      Endpoint: <code className={isDark ? 'text-zinc-400' : 'text-zinc-600'}>{service.endpoint}</code>
                     </div>
                     <button
                       onClick={() => regenerateKey(service.id)}
                       disabled={isRegenerating}
-                      className="flex items-center gap-1.5 text-xs text-zinc-500 hover:text-white transition disabled:opacity-50"
+                      className={`flex items-center gap-1.5 text-xs transition disabled:opacity-50 ${
+                        isDark ? 'text-zinc-500 hover:text-white' : 'text-zinc-500 hover:text-zinc-900'
+                      }`}
                     >
                       {isRegenerating ? (
                         <Loader2 className="w-3 h-3 animate-spin" />
@@ -234,9 +249,13 @@ export default function ApiKeys() {
       </div>
 
       {/* Usage Example */}
-      <div className="mt-8 bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-5">
-        <h3 className="text-sm font-medium text-white mb-3">Usage Example</h3>
-        <div className="bg-black rounded-lg p-3">
+      <div className={`mt-8 rounded-xl p-5 ${
+        isDark 
+          ? 'bg-zinc-900/50 border border-zinc-800/50' 
+          : 'bg-white border border-zinc-200 shadow-sm'
+      }`}>
+        <h3 className={`text-sm font-medium mb-3 ${isDark ? 'text-white' : 'text-zinc-900'}`}>Usage Example</h3>
+        <div className={`rounded-lg p-3 ${isDark ? 'bg-black' : 'bg-zinc-900'}`}>
           <pre className="text-xs text-zinc-400 overflow-x-auto">
             <code>
 {`curl -X GET "https://api.idledeveloper.tech/api/tiktok?url=VIDEO_URL" \\
@@ -244,8 +263,8 @@ export default function ApiKeys() {
             </code>
           </pre>
         </div>
-        <p className="text-xs text-zinc-500 mt-3">
-          Include your API key in the <code className="text-zinc-400">X-API-Key</code> header with every request.
+        <p className={`text-xs mt-3 ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>
+          Include your API key in the <code className={isDark ? 'text-zinc-400' : 'text-zinc-600'}>X-API-Key</code> header with every request.
         </p>
       </div>
     </div>

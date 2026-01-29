@@ -264,10 +264,13 @@ export function getUserStats(userId) {
     throw new Error('User not found');
   }
 
+  // Calculate credits used: totalRequests = credits consumed (1 credit per request)
+  const creditsUsed = user.totalRequests || 0;
+
   return {
     totalRequests: user.totalRequests || 0,
     todayRequests: 0, // Would need request logging to track this
-    creditsUsed: (user.isAdmin ? 0 : 25) - user.credits + user.totalRequests // Estimate
+    creditsUsed: creditsUsed
   };
 }
 

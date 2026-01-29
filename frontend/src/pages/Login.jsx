@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useTheme } from '../context/ThemeContext'
 import { Mail, Lock, ArrowRight, AlertCircle, Loader2, Eye, EyeOff, Zap, Shield, Clock } from 'lucide-react'
 
 export default function Login() {
@@ -10,6 +11,8 @@ export default function Login() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const { login } = useAuth()
+  const { theme } = useTheme()
+  const isDark = theme === 'dark'
   const navigate = useNavigate()
 
   const handleSubmit = async (e) => {
@@ -86,21 +89,21 @@ export default function Login() {
       </div>
 
       {/* Right Panel - Login Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-[#09090b]">
+      <div className={`w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-8 ${isDark ? 'bg-[#09090b]' : 'bg-zinc-50'}`}>
         <div className="w-full max-w-md">
           {/* Mobile Logo */}
           <div className="lg:hidden flex items-center gap-2 mb-8 justify-center">
-            <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-              <Zap className="w-4 h-4 text-black" />
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isDark ? 'bg-white' : 'bg-black'}`}>
+              <Zap className={`w-4 h-4 ${isDark ? 'text-black' : 'text-white'}`} />
             </div>
-            <span className="text-lg font-semibold text-white">IdleDeveloper</span>
+            <span className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-zinc-900'}`}>IdleDeveloper</span>
           </div>
 
           <div className="text-center lg:text-left mb-8">
-            <h2 className="text-2xl font-bold text-white mb-2">Sign in to your account</h2>
-            <p className="text-zinc-500">
+            <h2 className={`text-2xl font-bold mb-2 ${isDark ? 'text-white' : 'text-zinc-900'}`}>Sign in to your account</h2>
+            <p className={isDark ? 'text-zinc-500' : 'text-zinc-600'}>
               Don't have an account?{' '}
-              <Link to="/register" className="text-emerald-400 hover:text-emerald-300 font-medium">
+              <Link to="/register" className="text-emerald-500 hover:text-emerald-400 font-medium">
                 Create one free
               </Link>
             </p>
@@ -117,18 +120,22 @@ export default function Login() {
           {/* Login Form */}
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-zinc-300 mb-2">
+              <label htmlFor="email" className={`block text-sm font-medium mb-2 ${isDark ? 'text-zinc-300' : 'text-zinc-700'}`}>
                 Email address
               </label>
               <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
+                <Mail className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`} />
                 <input
                   id="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
-                  className="w-full bg-zinc-900 border border-zinc-800 rounded-xl py-3 pl-12 pr-4 text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all"
+                  className={`w-full border rounded-xl py-3 pl-12 pr-4 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all ${
+                    isDark 
+                      ? 'bg-zinc-900 border-zinc-800 text-white placeholder-zinc-500' 
+                      : 'bg-white border-zinc-300 text-zinc-900 placeholder-zinc-400'
+                  }`}
                   required
                 />
               </div>
@@ -136,28 +143,34 @@ export default function Login() {
 
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label htmlFor="password" className="block text-sm font-medium text-zinc-300">
+                <label htmlFor="password" className={`block text-sm font-medium ${isDark ? 'text-zinc-300' : 'text-zinc-700'}`}>
                   Password
                 </label>
-                <Link to="/forgot-password" className="text-sm text-emerald-400 hover:text-emerald-300">
+                <Link to="/forgot-password" className="text-sm text-emerald-500 hover:text-emerald-400">
                   Forgot password?
                 </Link>
               </div>
               <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
+                <Lock className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`} />
                 <input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full bg-zinc-900 border border-zinc-800 rounded-xl py-3 pl-12 pr-12 text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all"
+                  className={`w-full border rounded-xl py-3 pl-12 pr-12 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all ${
+                    isDark 
+                      ? 'bg-zinc-900 border-zinc-800 text-white placeholder-zinc-500' 
+                      : 'bg-white border-zinc-300 text-zinc-900 placeholder-zinc-400'
+                  }`}
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors"
+                  className={`absolute right-4 top-1/2 -translate-y-1/2 transition-colors ${
+                    isDark ? 'text-zinc-500 hover:text-zinc-300' : 'text-zinc-400 hover:text-zinc-600'
+                  }`}
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -184,13 +197,13 @@ export default function Login() {
           </form>
 
           {/* Footer */}
-          <p className="mt-8 text-center text-xs text-zinc-500">
+          <p className={`mt-8 text-center text-xs ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>
             By signing in, you agree to our{' '}
-            <Link to="/terms" className="text-zinc-400 hover:text-white underline">
+            <Link to="/terms" className={`underline ${isDark ? 'text-zinc-400 hover:text-white' : 'text-zinc-600 hover:text-zinc-900'}`}>
               Terms of Service
             </Link>{' '}
             and{' '}
-            <Link to="/privacy" className="text-zinc-400 hover:text-white underline">
+            <Link to="/privacy" className={`underline ${isDark ? 'text-zinc-400 hover:text-white' : 'text-zinc-600 hover:text-zinc-900'}`}>
               Privacy Policy
             </Link>
           </p>

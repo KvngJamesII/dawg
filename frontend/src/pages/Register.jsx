@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useTheme } from '../context/ThemeContext'
 import { ArrowRight, AlertCircle, Loader2, CheckCircle2, Zap, User, Mail, Lock, Eye, EyeOff, Gift, Rocket, Code2 } from 'lucide-react'
 
 export default function Register() {
@@ -16,6 +17,8 @@ export default function Register() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const { register } = useAuth()
+  const { theme } = useTheme()
+  const isDark = theme === 'dark'
   const navigate = useNavigate()
 
   const handleChange = (e) => {
@@ -143,21 +146,21 @@ export default function Register() {
       </div>
 
       {/* Right Panel - Registration Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-[#09090b]">
+      <div className={`w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-8 ${isDark ? 'bg-[#09090b]' : 'bg-zinc-50'}`}>
         <div className="w-full max-w-md">
           {/* Mobile Logo */}
           <div className="lg:hidden flex items-center gap-2 mb-8 justify-center">
-            <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-              <Zap className="w-4 h-4 text-black" />
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isDark ? 'bg-white' : 'bg-black'}`}>
+              <Zap className={`w-4 h-4 ${isDark ? 'text-black' : 'text-white'}`} />
             </div>
-            <span className="text-lg font-semibold text-white">IdleDeveloper</span>
+            <span className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-zinc-900'}`}>IdleDeveloper</span>
           </div>
 
           <div className="text-center lg:text-left mb-8">
-            <h2 className="text-2xl font-bold text-white mb-2">Create your account</h2>
-            <p className="text-zinc-500">
+            <h2 className={`text-2xl font-bold mb-2 ${isDark ? 'text-white' : 'text-zinc-900'}`}>Create your account</h2>
+            <p className={isDark ? 'text-zinc-500' : 'text-zinc-600'}>
               Already have an account?{' '}
-              <Link to="/login" className="text-emerald-400 hover:text-emerald-300 font-medium">
+              <Link to="/login" className="text-emerald-500 hover:text-emerald-400 font-medium">
                 Sign in
               </Link>
             </p>
@@ -174,11 +177,11 @@ export default function Register() {
           {/* Registration Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-zinc-300 mb-2">
+              <label htmlFor="name" className={`block text-sm font-medium mb-2 ${isDark ? 'text-zinc-300' : 'text-zinc-700'}`}>
                 Full name
               </label>
               <div className="relative">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
+                <User className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`} />
                 <input
                   id="name"
                   name="name"
@@ -186,18 +189,22 @@ export default function Register() {
                   value={formData.name}
                   onChange={handleChange}
                   placeholder="John Doe"
-                  className="w-full bg-zinc-900 border border-zinc-800 rounded-xl py-3 pl-12 pr-4 text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all"
+                  className={`w-full border rounded-xl py-3 pl-12 pr-4 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all ${
+                    isDark 
+                      ? 'bg-zinc-900 border-zinc-800 text-white placeholder-zinc-500' 
+                      : 'bg-white border-zinc-300 text-zinc-900 placeholder-zinc-400'
+                  }`}
                   required
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-zinc-300 mb-2">
+              <label htmlFor="email" className={`block text-sm font-medium mb-2 ${isDark ? 'text-zinc-300' : 'text-zinc-700'}`}>
                 Email address
               </label>
               <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
+                <Mail className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`} />
                 <input
                   id="email"
                   name="email"
@@ -205,18 +212,22 @@ export default function Register() {
                   value={formData.email}
                   onChange={handleChange}
                   placeholder="you@example.com"
-                  className="w-full bg-zinc-900 border border-zinc-800 rounded-xl py-3 pl-12 pr-4 text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all"
+                  className={`w-full border rounded-xl py-3 pl-12 pr-4 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all ${
+                    isDark 
+                      ? 'bg-zinc-900 border-zinc-800 text-white placeholder-zinc-500' 
+                      : 'bg-white border-zinc-300 text-zinc-900 placeholder-zinc-400'
+                  }`}
                   required
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-zinc-300 mb-2">
+              <label htmlFor="password" className={`block text-sm font-medium mb-2 ${isDark ? 'text-zinc-300' : 'text-zinc-700'}`}>
                 Password
               </label>
               <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
+                <Lock className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`} />
                 <input
                   id="password"
                   name="password"
@@ -224,13 +235,19 @@ export default function Register() {
                   value={formData.password}
                   onChange={handleChange}
                   placeholder="••••••••"
-                  className="w-full bg-zinc-900 border border-zinc-800 rounded-xl py-3 pl-12 pr-12 text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all"
+                  className={`w-full border rounded-xl py-3 pl-12 pr-12 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all ${
+                    isDark 
+                      ? 'bg-zinc-900 border-zinc-800 text-white placeholder-zinc-500' 
+                      : 'bg-white border-zinc-300 text-zinc-900 placeholder-zinc-400'
+                  }`}
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors"
+                  className={`absolute right-4 top-1/2 -translate-y-1/2 transition-colors ${
+                    isDark ? 'text-zinc-500 hover:text-zinc-300' : 'text-zinc-400 hover:text-zinc-600'
+                  }`}
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -243,24 +260,24 @@ export default function Register() {
                       <div
                         key={level}
                         className={`h-1 flex-1 rounded-full transition-all ${
-                          level <= passwordStrength.score ? passwordStrength.color : 'bg-zinc-800'
+                          level <= passwordStrength.score ? passwordStrength.color : isDark ? 'bg-zinc-800' : 'bg-zinc-200'
                         }`}
                       />
                     ))}
                   </div>
-                  <p className="text-xs text-zinc-500">
-                    Password strength: <span className={`${passwordStrength.score >= 3 ? 'text-emerald-400' : 'text-zinc-400'}`}>{passwordStrength.label}</span>
+                  <p className={`text-xs ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>
+                    Password strength: <span className={`${passwordStrength.score >= 3 ? 'text-emerald-500' : isDark ? 'text-zinc-400' : 'text-zinc-600'}`}>{passwordStrength.label}</span>
                   </p>
                 </div>
               )}
             </div>
 
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-zinc-300 mb-2">
+              <label htmlFor="confirmPassword" className={`block text-sm font-medium mb-2 ${isDark ? 'text-zinc-300' : 'text-zinc-700'}`}>
                 Confirm password
               </label>
               <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
+                <Lock className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`} />
                 <input
                   id="confirmPassword"
                   name="confirmPassword"
@@ -268,13 +285,19 @@ export default function Register() {
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   placeholder="••••••••"
-                  className="w-full bg-zinc-900 border border-zinc-800 rounded-xl py-3 pl-12 pr-12 text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all"
+                  className={`w-full border rounded-xl py-3 pl-12 pr-12 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all ${
+                    isDark 
+                      ? 'bg-zinc-900 border-zinc-800 text-white placeholder-zinc-500' 
+                      : 'bg-white border-zinc-300 text-zinc-900 placeholder-zinc-400'
+                  }`}
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors"
+                  className={`absolute right-4 top-1/2 -translate-y-1/2 transition-colors ${
+                    isDark ? 'text-zinc-500 hover:text-zinc-300' : 'text-zinc-400 hover:text-zinc-600'
+                  }`}
                 >
                   {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -283,7 +306,7 @@ export default function Register() {
                 <p className="mt-1 text-xs text-red-400">Passwords do not match</p>
               )}
               {formData.confirmPassword && formData.password === formData.confirmPassword && formData.password && (
-                <p className="mt-1 text-xs text-emerald-400 flex items-center gap-1">
+                <p className="mt-1 text-xs text-emerald-500 flex items-center gap-1">
                   <CheckCircle2 className="w-3 h-3" /> Passwords match
                 </p>
               )}
@@ -296,15 +319,17 @@ export default function Register() {
                 id="terms"
                 checked={agreedToTerms}
                 onChange={(e) => setAgreedToTerms(e.target.checked)}
-                className="mt-1 w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-emerald-500 focus:ring-emerald-500/50 focus:ring-offset-0"
+                className={`mt-1 w-4 h-4 rounded text-emerald-500 focus:ring-emerald-500/50 focus:ring-offset-0 ${
+                  isDark ? 'border-zinc-700 bg-zinc-900' : 'border-zinc-300 bg-white'
+                }`}
               />
-              <label htmlFor="terms" className="text-sm text-zinc-400">
+              <label htmlFor="terms" className={`text-sm ${isDark ? 'text-zinc-400' : 'text-zinc-600'}`}>
                 I agree to the{' '}
-                <Link to="/terms" className="text-emerald-400 hover:text-emerald-300 underline">
+                <Link to="/terms" className="text-emerald-500 hover:text-emerald-400 underline">
                   Terms of Service
                 </Link>{' '}
                 and{' '}
-                <Link to="/privacy" className="text-emerald-400 hover:text-emerald-300 underline">
+                <Link to="/privacy" className="text-emerald-500 hover:text-emerald-400 underline">
                   Privacy Policy
                 </Link>
               </label>

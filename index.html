@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paystack Payment Test</title>
+    <script src="https://js.paystack.co/v1/inline.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .logo p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        /* Auth Pages */
+        .auth-page {
+            display: none;
+        }
+
+        .auth-page.active {
+            display: block;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 30px;
+            border-radius: 12px;
+            background: #f5f5f5;
+            padding: 5px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 10px;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            background: white;
+            color: #667eea;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .tab:hover:not(.active) {
+            color: #333;
+        }
+
+        /* User Header */
+        .user-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding: 15px;
+            background: linear-gradient(135deg, #f8f9ff 0%, #ede7f6 100%);
+            border-radius: 12px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .user-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: #333;
+            font-size: 16px;
+        }
+
+        .user-email {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .logout-btn {
+            padding: 8px 16px;
+            background: transparent;
+            border: 2px solid #e74c3c;
+            color: #e74c3c;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .payment-options {
+            margin-bottom: 30px;
+        }
+
+        .payment-options h2 {
+            color: #333;
+            font-size: 18px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .option {
+            display: flex;
+            align-items: center;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .option:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .option.selected {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #f8f9ff 0%, #ede7f6 100%);
+        }
+
+        .option input[type="radio"] {
+            display: none;
+        }
+
+        .option .radio-custom {
+            width: 24px;
+            height: 24px;
+            border: 2px solid #ccc;
+            border-radius: 50%;
+            margin-right: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .option.selected .radio-custom {
+            border-color: #667eea;
+        }
+
+        .option.selected .radio-custom::after {
+            content: '';
+            width: 12px;
+            height: 12px;
+            background: #667eea;
+            border-radius: 50%;
+        }
+
+        .option-details {
+            flex: 1;
+        }
+
+        .option-details .amount {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .option-details .description {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .secure-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 20px;
+            color: #666;
+            font-size: 12px;
+        }
+
+        .secure-badge svg {
+            margin-right: 8px;
+        }
+
+        /* Success Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 20px;
+            padding: 50px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            animation: slideUp 0.5s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 25px;
+            animation: scaleIn 0.5s ease 0.2s both;
+        }
+
+        @keyframes scaleIn {
+            from {
+                transform: scale(0);
+            }
+            to {
+                transform: scale(1);
+            }
+        }
+
+        .success-icon svg {
+            width: 40px;
+            height: 40px;
+            stroke: white;
+            stroke-width: 3;
+        }
+
+        .modal h2 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 15px;
+        }
+
+        .modal p {
+            color: #666;
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .modal .reference {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-family: monospace;
+            font-size: 14px;
+            color: #333;
+            word-break: break-all;
+        }
+
+        .modal .close-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        .modal .close-btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* Error styles */
+        .error-message {
+            color: #e74c3c;
+            font-size: 12px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .form-group.error input {
+            border-color: #e74c3c;
+        }
+
+        .form-group.error .error-message {
+            display: block;
+        }
+
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #333;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 14px;
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 2000;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .toast.error {
+            background: #e74c3c;
+        }
+
+        .toast.success {
+            background: #4CAF50;
+        }
+
+        /* Password toggle */
+        .password-wrapper {
+            position: relative;
+        }
+
+        .password-wrapper input {
+            padding-right: 50px;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #666;
+            background: none;
+            border: none;
+            padding: 5px;
+        }
+
+        .password-toggle:hover {
+            color: #667eea;
+        }
+
+        /* Payment Method Selection */
+        .payment-method {
+            margin-bottom: 30px;
+        }
+
+        .payment-method h2 {
+            color: #333;
+            font-size: 18px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .method-options {
+            display: flex;
+            gap: 15px;
+        }
+
+        .method-option {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .method-option:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .method-option.selected {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #f8f9ff 0%, #ede7f6 100%);
+        }
+
+        .method-option input[type="radio"] {
+            display: none;
+        }
+
+        .method-icon {
+            width: 60px;
+            height: 60px;
+            background: #f5f5f5;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 12px;
+            color: #666;
+            transition: all 0.3s ease;
+        }
+
+        .method-option.selected .method-icon {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .method-details {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .method-name {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .method-desc {
+            font-size: 11px;
+            color: #888;
+        }
+
+        .method-check {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 24px;
+            height: 24px;
+            background: #667eea;
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .method-option.selected .method-check {
+            display: flex;
+        }
+
+        @media (max-width: 400px) {
+            .method-options {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <h1>💳 Payment Test</h1>
+            <p>Secure payment powered by Paystack</p>
+        </div>
+
+        <!-- Auth Page -->
+        <div class="auth-page active" id="authPage">
+            <div class="tabs">
+                <div class="tab active" data-tab="login">Login</div>
+                <div class="tab" data-tab="signup">Sign Up</div>
+            </div>
+
+            <!-- Login Form -->
+            <form id="loginForm" class="auth-form active">
+                <div class="form-group">
+                    <label for="loginEmail">Email Address</label>
+                    <input type="email" id="loginEmail" placeholder="Enter your email" required>
+                    <span class="error-message">Please enter a valid email</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="loginPassword" placeholder="Enter your password" required>
+                        <button type="button" class="password-toggle" onclick="togglePassword('loginPassword', this)">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        </button>
+                    </div>
+                    <span class="error-message">Password is required</span>
+                </div>
+
+                <button type="submit" class="btn">Login</button>
+            </form>
+
+            <!-- Signup Form -->
+            <form id="signupForm" class="auth-form" style="display: none;">
+                <div class="form-group">
+                    <label for="signupName">Full Name</label>
+                    <input type="text" id="signupName" placeholder="Enter your full name" required>
+                    <span class="error-message">Please enter your name</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="signupEmail">Email Address</label>
+                    <input type="email" id="signupEmail" placeholder="Enter your email" required>
+                    <span class="error-message">Please enter a valid email</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="signupPassword">Password</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="signupPassword" placeholder="Create a password (min 6 chars)" required>
+                        <button type="button" class="password-toggle" onclick="togglePassword('signupPassword', this)">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        </button>
+                    </div>
+                    <span class="error-message">Password must be at least 6 characters</span>
+                </div>
+
+                <button type="submit" class="btn">Create Account</button>
+            </form>
+        </div>
+
+        <!-- Payment Page -->
+        <div class="auth-page" id="paymentPage">
+            <div class="user-header">
+                <div class="user-info">
+                    <div class="user-avatar" id="userAvatar">U</div>
+                    <div class="user-details">
+                        <span class="user-name" id="userName">User</span>
+                        <span class="user-email" id="userEmail">user@email.com</span>
+                    </div>
+                </div>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+
+            <div class="payment-options">
+                <h2>Select Payment Amount</h2>
+                
+                <label class="option selected" data-amount="100">
+                    <input type="radio" name="amount" value="100" checked>
+                    <span class="radio-custom"></span>
+                    <div class="option-details">
+                        <div class="amount">₦100</div>
+                        <div class="description">Basic test payment</div>
+                    </div>
+                </label>
+
+                <label class="option" data-amount="200">
+                    <input type="radio" name="amount" value="200">
+                    <span class="radio-custom"></span>
+                    <div class="option-details">
+                        <div class="amount">₦200</div>
+                        <div class="description">Standard test payment</div>
+                    </div>
+                </label>
+            </div>
+
+            <div class="payment-method">
+                <h2>Select Payment Method</h2>
+                
+                <div class="method-options">
+                    <label class="method-option selected" data-method="card">
+                        <input type="radio" name="method" value="card" checked>
+                        <div class="method-icon">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                                <line x1="1" y1="10" x2="23" y2="10"></line>
+                            </svg>
+                        </div>
+                        <div class="method-details">
+                            <span class="method-name">Pay with Card</span>
+                            <span class="method-desc">Visa, Mastercard, Verve</span>
+                        </div>
+                        <span class="method-check">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                        </span>
+                    </label>
+
+                    <label class="method-option" data-method="bank_transfer">
+                        <input type="radio" name="method" value="bank_transfer">
+                        <div class="method-icon">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 21h18"></path>
+                                <path d="M3 10h18"></path>
+                                <path d="M5 6l7-3 7 3"></path>
+                                <path d="M4 10v11"></path>
+                                <path d="M20 10v11"></path>
+                                <path d="M8 10v11"></path>
+                                <path d="M12 10v11"></path>
+                                <path d="M16 10v11"></path>
+                            </svg>
+                        </div>
+                        <div class="method-details">
+                            <span class="method-name">Pay with Transfer</span>
+                            <span class="method-desc">Bank transfer to account</span>
+                        </div>
+                        <span class="method-check">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                        </span>
+                    </label>
+                </div>
+            </div>
+
+            <button class="btn" id="payBtn" onclick="payWithPaystack()">
+                Pay ₦100 with Card
+            </button>
+
+            <div class="secure-badge">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+                Secured by Paystack | 256-bit SSL encryption
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="modal-overlay" id="successModal">
+        <div class="modal">
+            <div class="success-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+            </div>
+            <h2>Payment Successful! 🎉</h2>
+            <p>Your payment has been processed successfully.</p>
+            <p id="paymentDetails"></p>
+            <div class="reference" id="paymentReference"></div>
+            <button class="close-btn" onclick="closeModal()">Done</button>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // Paystack Public Key
+        const PAYSTACK_PUBLIC_KEY = 'pk_live_efa6b01e6086e21bda6762026dcaec02dd4f669a';
+
+        // Current user
+        let currentUser = null;
+        let selectedAmount = 100;
+        let selectedMethod = 'card';
+
+        // DOM Elements
+        const authPage = document.getElementById('authPage');
+        const paymentPage = document.getElementById('paymentPage');
+        const loginForm = document.getElementById('loginForm');
+        const signupForm = document.getElementById('signupForm');
+        const tabs = document.querySelectorAll('.tab');
+        const options = document.querySelectorAll('.option');
+        const methodOptions = document.querySelectorAll('.method-option');
+        const payBtn = document.getElementById('payBtn');
+        const successModal = document.getElementById('successModal');
+
+        // Initialize - Check if user is logged in
+        function init() {
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                showPaymentPage();
+            }
+        }
+
+        // Tab switching
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                tabs.forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+
+                if (this.dataset.tab === 'login') {
+                    loginForm.style.display = 'block';
+                    signupForm.style.display = 'none';
+                } else {
+                    loginForm.style.display = 'none';
+                    signupForm.style.display = 'block';
+                }
+            });
+        });
+
+        // Toggle password visibility
+        function togglePassword(inputId, btn) {
+            const input = document.getElementById(inputId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                </svg>`;
+            } else {
+                input.type = 'password';
+                btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                </svg>`;
+            }
+        }
+
+        // Show toast notification
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast ' + type + ' show';
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Validate email
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+
+        // Get users from localStorage
+        function getUsers() {
+            const users = localStorage.getItem('users');
+            return users ? JSON.parse(users) : [];
+        }
+
+        // Save users to localStorage
+        function saveUsers(users) {
+            localStorage.setItem('users', JSON.stringify(users));
+        }
+
+        // Signup handler
+        signupForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('signupName').value.trim();
+            const email = document.getElementById('signupEmail').value.trim().toLowerCase();
+            const password = document.getElementById('signupPassword').value;
+
+            // Validation
+            let isValid = true;
+
+            if (name.length < 2) {
+                document.getElementById('signupName').parentElement.classList.add('error');
+                isValid = false;
+            } else {
+                document.getElementById('signupName').parentElement.classList.remove('error');
+            }
+
+            if (!isValidEmail(email)) {
+                document.getElementById('signupEmail').parentElement.classList.add('error');
+                isValid = false;
+            } else {
+                document.getElementById('signupEmail').parentElement.classList.remove('error');
+            }
+
+            if (password.length < 6) {
+                document.getElementById('signupPassword').parentElement.parentElement.classList.add('error');
+                isValid = false;
+            } else {
+                document.getElementById('signupPassword').parentElement.parentElement.classList.remove('error');
+            }
+
+            if (!isValid) return;
+
+            // Check if user already exists
+            const users = getUsers();
+            if (users.find(u => u.email === email)) {
+                showToast('An account with this email already exists', 'error');
+                return;
+            }
+
+            // Create new user
+            const newUser = { name, email, password };
+            users.push(newUser);
+            saveUsers(users);
+
+            // Log them in
+            currentUser = { name, email };
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+
+            showToast('Account created successfully!', 'success');
+            showPaymentPage();
+        });
+
+        // Login handler
+        loginForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+            const password = document.getElementById('loginPassword').value;
+
+            // Validation
+            let isValid = true;
+
+            if (!isValidEmail(email)) {
+                document.getElementById('loginEmail').parentElement.classList.add('error');
+                isValid = false;
+            } else {
+                document.getElementById('loginEmail').parentElement.classList.remove('error');
+            }
+
+            if (!password) {
+                document.getElementById('loginPassword').parentElement.parentElement.classList.add('error');
+                isValid = false;
+            } else {
+                document.getElementById('loginPassword').parentElement.parentElement.classList.remove('error');
+            }
+
+            if (!isValid) return;
+
+            // Find user
+            const users = getUsers();
+            const user = users.find(u => u.email === email && u.password === password);
+
+            if (!user) {
+                showToast('Invalid email or password', 'error');
+                return;
+            }
+
+            // Log them in
+            currentUser = { name: user.name, email: user.email };
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+
+            showToast('Welcome back, ' + user.name + '!', 'success');
+            showPaymentPage();
+        });
+
+        // Show payment page
+        function showPaymentPage() {
+            authPage.classList.remove('active');
+            paymentPage.classList.add('active');
+
+            // Update user header
+            document.getElementById('userName').textContent = currentUser.name;
+            document.getElementById('userEmail').textContent = currentUser.email;
+            document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
+        }
+
+        // Logout
+        function logout() {
+            currentUser = null;
+            localStorage.removeItem('currentUser');
+            
+            paymentPage.classList.remove('active');
+            authPage.classList.add('active');
+
+            // Reset forms
+            loginForm.reset();
+            signupForm.reset();
+
+            // Switch to login tab
+            tabs.forEach(t => t.classList.remove('active'));
+            tabs[0].classList.add('active');
+            loginForm.style.display = 'block';
+            signupForm.style.display = 'none';
+
+            showToast('Logged out successfully', 'success');
+        }
+
+        // Handle option selection
+        options.forEach(option => {
+            option.addEventListener('click', function() {
+                options.forEach(opt => opt.classList.remove('selected'));
+                this.classList.add('selected');
+                selectedAmount = parseInt(this.dataset.amount);
+                this.querySelector('input[type="radio"]').checked = true;
+                updatePayButton();
+            });
+        });
+
+        // Handle payment method selection
+        methodOptions.forEach(method => {
+            method.addEventListener('click', function() {
+                methodOptions.forEach(m => m.classList.remove('selected'));
+                this.classList.add('selected');
+                selectedMethod = this.dataset.method;
+                this.querySelector('input[type="radio"]').checked = true;
+                updatePayButton();
+            });
+        });
+
+        // Update pay button text
+        function updatePayButton() {
+            const methodText = selectedMethod === 'card' ? 'Card' : 'Transfer';
+            payBtn.textContent = `Pay ₦${selectedAmount} with ${methodText}`;
+        }
+
+        // Paystack payment function
+        function payWithPaystack() {
+            if (!currentUser) {
+                showToast('Please login first', 'error');
+                return;
+            }
+
+            const amount = selectedAmount * 100; // Paystack expects amount in kobo
+
+            const handler = PaystackPop.setup({
+                key: PAYSTACK_PUBLIC_KEY,
+                email: currentUser.email,
+                amount: amount,
+                currency: 'NGN',
+                channels: [selectedMethod], // Only show selected payment method
+                ref: 'TXN_' + Date.now() + '_' + Math.floor(Math.random() * 1000000),
+                metadata: {
+                    custom_fields: [
+                        {
+                            display_name: "Customer Name",
+                            variable_name: "customer_name",
+                            value: currentUser.name
+                        },
+                        {
+                            display_name: "Payment Method",
+                            variable_name: "payment_method",
+                            value: selectedMethod === 'card' ? 'Card' : 'Bank Transfer'
+                        }
+                    ]
+                },
+                callback: function(response) {
+                    showSuccessModal(response.reference, currentUser.email, selectedAmount);
+                },
+                onClose: function() {
+                    console.log('Payment window closed');
+                }
+            });
+
+            handler.openIframe();
+        }
+
+        // Show success modal
+        function showSuccessModal(reference, email, amount) {
+            document.getElementById('paymentDetails').textContent = 
+                `Amount: ₦${amount} | Email: ${email}`;
+            document.getElementById('paymentReference').textContent = 
+                `Reference: ${reference}`;
+            successModal.classList.add('active');
+        }
+
+        // Close modal
+        function closeModal() {
+            successModal.classList.remove('active');
+            // Reset selection
+            options.forEach(opt => opt.classList.remove('selected'));
+            options[0].classList.add('selected');
+            selectedAmount = 100;
+            
+            // Reset method to card
+            methodOptions.forEach(m => m.classList.remove('selected'));
+            methodOptions[0].classList.add('selected');
+            selectedMethod = 'card';
+            
+            updatePayButton();
+        }
+
+        // Close modal on overlay click
+        successModal.addEventListener('click', function(e) {
+            if (e.target === successModal) {
+                closeModal();
+            }
+        });
+
+        // Remove error styling on input
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('input', function() {
+                const formGroup = this.closest('.form-group');
+                if (formGroup) {
+                    formGroup.classList.remove('error');
+                }
+            });
+        });
+
+        // Initialize on page load
+        init();
+    </script>
+</body>
+</html>
