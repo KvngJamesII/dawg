@@ -4,14 +4,29 @@ import { TwitterService } from '../services/twitterService.js';
 import { downloadYouTubeAudio, isYouTubeUrl } from '../services/youtubeService.js';
 import { detectPlatform } from '../utils/platformDetector.js';
 import { tokenService } from '../services/tokenService.js';
+import { getUserByApiKey } from '../services/userService.js';
 
 const tiktokService = new TikTokService();
 const instagramService = new InstagramService();
 const twitterService = new TwitterService();
 
-// Helper to validate API key (no tracking - middleware handles that)
+// Helper to validate API key (supports both admin tokens and user API keys)
 function validateKey(key) {
   if (!key) return { valid: true, noKey: true }; // Allow requests without key (public rate limited)
+  
+  // Check if it's a user API key (tiktok_xxx or youtube_xxx)
+  if (key.startsWith('tiktok_') || key.startsWith('youtube_')) {
+    const user = getUserByApiKey(key);
+    if (!user) {
+      return { valid: false, error: 'Invalid API key' };
+    }
+    if (user.credits <= 0) {
+      return { valid: false, error: 'Insufficient credits. Please purchase more credits.' };
+    }
+    return { valid: true, user };
+  }
+  
+  // Otherwise check admin tokens
   return tokenService.validateToken(key);
 }
 
