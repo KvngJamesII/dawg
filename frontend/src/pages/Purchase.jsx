@@ -81,33 +81,56 @@ export default function Purchase() {
 
   const detectCountry = async () => {
     try {
-      // Using multiple IP detection services with fallback
-      const services = [
-        'https://ipapi.co/json/',
-        'https://ip-api.com/json/',
-        'https://ipinfo.io/json'
-      ]
+      // Try multiple IP detection services with CORS support
+      let detected = false
+      
+      // First try: ipwho.is (free, no API key, CORS enabled)
+      try {
+        const response = await fetch('https://ipwho.is/')
+        const data = await response.json()
+        if (data.success !== false && data.country_code) {
+          setIsNigeria(data.country_code.toUpperCase() === 'NG')
+          detected = true
+        }
+      } catch (err) {
+        console.log('ipwho.is failed, trying fallback...')
+      }
 
-      for (const service of services) {
+      // Second try: ipapi.co with specific field (sometimes works better)
+      if (!detected) {
         try {
-          const response = await fetch(service, { timeout: 5000 })
-          const data = await response.json()
-          
-          // Different services return country code in different fields
-          const countryCode = data.country_code || data.countryCode || data.country
-          
-          if (countryCode) {
+          const response = await fetch('https://ipapi.co/country/')
+          const countryCode = await response.text()
+          if (countryCode && countryCode.length === 2) {
             setIsNigeria(countryCode.toUpperCase() === 'NG')
-            break
+            detected = true
           }
         } catch (err) {
-          continue
+          console.log('ipapi.co failed, trying fallback...')
         }
+      }
+
+      // Third try: Use backend API to detect
+      if (!detected) {
+        try {
+          const response = await api.get('/auth/country')
+          if (response.data.success && response.data.countryCode) {
+            setIsNigeria(response.data.countryCode.toUpperCase() === 'NG')
+            detected = true
+          }
+        } catch (err) {
+          console.log('Backend country detection failed')
+        }
+      }
+
+      // Default to showing Nigerian pricing (since most users will be Nigerian)
+      if (!detected) {
+        setIsNigeria(true)
       }
     } catch (error) {
       console.error('Failed to detect country:', error)
-      // Default to international pricing if detection fails
-      setIsNigeria(false)
+      // Default to Nigerian pricing
+      setIsNigeria(true)
     } finally {
       setCountryLoading(false)
       setLoading(false)
@@ -176,20 +199,18 @@ export default function Purchase() {
           }
         ]
       },
-      callback: async function(response) {
+      callback: function(response) {
         setShowPaymentModal(false)
         setProcessing(false)
         
-        try {
-          // Verify payment on backend
-          const verifyRes = await api.post('/payments/verify-paystack', {
-            reference: response.reference,
-            packageId: pkg.id,
-            credits: pkg.credits,
-            amount: pkg.priceNGN,
-            currency: 'NGN'
-          })
-
+        // Verify payment on backend (non-blocking)
+        api.post('/payments/verify-paystack', {
+          reference: response.reference,
+          packageId: pkg.id,
+          credits: pkg.credits,
+          amount: pkg.priceNGN,
+          currency: 'NGN'
+        }).then(verifyRes => {
           if (verifyRes.data.success) {
             setNotification({ 
               type: 'success', 
@@ -200,14 +221,14 @@ export default function Purchase() {
           } else {
             setNotification({ type: 'error', message: 'Payment verification failed. Please contact support.' })
           }
-        } catch (error) {
+        }).catch(error => {
           // Even if verification API fails, show success since Paystack confirmed
           setNotification({ 
             type: 'success', 
             message: `Payment received! Reference: ${response.reference}. Credits will be added shortly.` 
           })
           refreshUser()
-        }
+        })
       },
       onClose: function() {
         setProcessing(false)
